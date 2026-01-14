@@ -1,0 +1,416 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Positionnement Habiletés FAD - Version Autoportante</title>
+    
+    <!-- Bibliothèques Externes -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@18.3.1",
+        "react-dom": "https://esm.sh/react-dom@18.3.1",
+        "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
+        "recharts": "https://esm.sh/recharts@2.12.7?external=react,react-dom",
+        "lucide-react": "https://esm.sh/lucide-react@0.400.0?external=react"
+      }
+    }
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        .dark .glass-panel {
+            background: rgba(15, 23, 42, 0.7);
+        }
+        @media print {
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 transition-colors duration-300">
+    <div id="root"></div>
+
+    <script type="text/babel" data-type="module">
+        import React, { useState, useEffect, useMemo, useCallback } from 'react';
+        import ReactDOM from 'react-dom/client';
+        import { 
+            BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as ReChartsTooltip, ResponsiveContainer, Cell 
+        } from 'recharts';
+        import { 
+            RotateCcw, Save, FileText, Printer, Moon, Sun, ChevronRight, ExternalLink,
+            BookOpen, Users, Layout, GraduationCap, Cloud
+        } from 'lucide-react';
+
+        // --- DONNÉES ---
+        const QUESTIONS = [
+            {
+                id: 0,
+                cat: "ÉLABORATION DU COURS",
+                q: [
+                    { id: "q1", t: "1.1 Modèle utilisé (ADDIE, MISA) ?", a: "Non, expérience présentiel", b: "Pas systématiquement", c: "Régulièrement adapté" },
+                    { id: "q2", t: "1.2 Test des outils technologiques ?", a: "Non", b: "Quelques outils", c: "Tout testé" },
+                    { id: "q3", t: "1.3 Consultation ressources existantes ?", a: "Tout créer", b: "Occasionnellement", c: "Inventaire complet" },
+                    { id: "q4", t: "1.4 Équipe multidisciplinaire ?", a: "Seul", b: "Ponctuellement", c: "Équipe complète" },
+                    { id: "q5", t: "1.5 Plan d'amélioration continue ?", a: "Non", b: "Commentaires", c: "Plan formel" }
+                ]
+            },
+            {
+                id: 1,
+                cat: "DÉMARCHE D'APPRENTISSAGE",
+                q: [
+                    { id: "q6", t: "2.1 Respect de la Triple concordance ?", a: "Pas toujours", b: "Inégal", c: "Systématique" },
+                    { id: "q7", t: "2.2 Variété des activités ?", a: "Lectures", b: "Moyenne", c: "Grande variété" },
+                    { id: "q8", t: "2.3 Choix offerts aux apprenants ?", a: "Parcours unique", b: "Limité", c: "Plusieurs chemins" },
+                    { id: "q9", t: "2.4 Structure du contenu ?", a: "Cours longs", b: "Unités larges", c: "Éléments ciblés" },
+                    { id: "q10", t: "2.5 Clarté des attentes ?", a: "À déduire", b: "Ponctuelle", c: "Critères affichés" }
+                ]
+            },
+            {
+                id: 2,
+                cat: "ORGANISATION DU COURS",
+                q: [
+                    { id: "q11", t: "3.1 Plan d'études spécifique FAD ?", a: "Adapté présentiel", b: "Incomplet", c: "Complet" },
+                    { id: "q12", t: "3.2 Interface numérique ?", a: "Décousu", b: "Peu intuitif", c: "Convivial" },
+                    { id: "q13", t: "3.3 Ressources multimédias ?", a: "Texte/PDF", b: "Vidéos simples", c: "Interactif/Podcast" },
+                    { id: "q14", t: "3.4 Choix justifiés ?", a: "Populaires", b: "Besoins partiels", c: "Raison claire" },
+                    { id: "q15", t: "3.5 Équilibre Synchrone / Asynchrone ?", a: "Asynchrone", b: "Mélange inégal", c: "Équilibre pensé" }
+                ]
+            },
+            {
+                id: 3,
+                cat: "ENCADREMENT DES APPRENANTS",
+                q: [
+                    { id: "q16", t: "4.1 Accueil des apprenants ?", a: "Débrouillardise", b: "Message simple", c: "Séance structurée" },
+                    { id: "q17", t: "4.2 Formation aux outils ?", a: "Supposé acquis", b: "Guides", c: "Proactif" },
+                    { id: "q18", t: "4.3 Nétiquette et délais ?", a: "Non définis", b: "Peu clair", c: "Précis" },
+                    { id: "q19", t: "4.4 Soutien autonomie ?", a: "À eux de s'organiser", b: "Conseils", c: "Stratégies" },
+                    { id: "q20", t: "4.5 Engagement et AFEST ?", a: "Travaux", b: "Ponctuel", c: "Suivi régulier" }
+                ]
+            }
+        ];
+
+        const RESOURCES = {
+            0: {
+                debut: [{ t: "CADRE21 - Explorateur", d: "Structuration systémique.", l: "https://cadre21.org/groupe-de-cours/scenarisation-pedagogique-en-fad" }, { t: "TELUQ - Design", d: "Template pratique.", l: "https://jenseigneadistance.teluq.ca/mod/page/view.php?id=485" }, { t: "Wikipedia - ADDIE", d: "Théorie.", l: "https://fr.wikipedia.org/wiki/Modèle_ADDIE" }],
+                inter: [{ t: "CADRE21 - Architecte", d: "Design complexe.", l: "https://www.cadre21.org/axefad/" }, { t: "Cégep Trois-Rivières", d: "Modèles FAD.", l: "https://pratiquesfad.ca/quel-modele-choisir-ca-depend/" }],
+                expert: [{ t: "CADRE21 - Innovateur", d: "Leadership FAD.", l: "https://www.cadre21.org/axefad/" }, { t: "Beedeez", d: "Modèles avancés.", l: "https://www.beedeez.com/fr/blog/quest-ce-que-le-modele-addie" }]
+            },
+            1: {
+                debut: [{ t: "HEC Montréal - Alignement", d: "Triple concordance.", l: "https://enseigner.hec.ca/pedagogie/alignement-pedagogique/" }, { t: "CADRE21 - Pédagogie active", d: "Bases.", l: "https://cadre21.org/groupe-de-cours/pedagogie-active-en-fad" }, { t: "Formagora", d: "Méthode active.", l: "https://www.formagora.fr/actualites/quest-ce-que-la-methode-pedagogique-active-et-comment-la-pratiquer" }],
+                inter: [{ t: "CADRE21 - Répertoire", d: "20 stratégies.", l: "https://www.cadre21.org/axefad/repertoire-des-strategies-pedagogiques/" }, { t: "Univ. Bordeaux", d: "Alignement.", l: "https://enseigner.u-bordeaux.fr/politique-de-formation/" }],
+                expert: [{ t: "ENPC - Théories", d: "Innovation.", l: "https://pedagotheque.enpc.fr/2016/05/04/quest-ce-que-la-pedagogie-active/" }, { t: "BBF - Mode d'emploi", d: "Projets/Cas.", l: "https://bbf.enssib.fr/consulter/bbf-2018-16-0016-002" }]
+            },
+            2: {
+                debut: [{ t: "Moodle - Lancement", d: "Fonctionnalités.", l: "https://moodle.com/fr/" }, { t: "RÉCIT FAD - Technique", d: "Moodle/Outils.", l: "https://recitfad.ca/moodledocs/guide-conception-fad.html" }, { t: "Itslearning", d: "Optimisation.", l: "https://u2p-normandie.fr/optimiser-apprentissage-numerique/" }],
+                inter: [{ t: "AUF - Administration", d: "Gestion LMS.", l: "https://formations.auf.org/home/formation-ific/" }, { t: "RÉCIT FAD - Plugiciels", d: "Améliorer Moodle.", l: "https://ecolebranchee.com/plugiciels-sur-mesure-favoriser-apprentissage-moodle/" }],
+                expert: [{ t: "Moodle Workplace", d: "Personnalisation.", l: "https://moodle.com/fr/solutions/technologie-informatique/" }, { t: "FADIO - Ateliers", d: "Ingénierie réelle.", l: "https://fadio.net/evenements/semaine-de-la-formation-a-distance/ateliers-de-la-semaine-fad-2022/" }]
+            },
+            3: {
+                debut: [{ t: "The Conversation - Accompagner", d: "Motivation.", l: "https://theconversation.com/formation-a-distance-comment-accompagner-les-apprenants-quon-ne-rencontre-pas-241999" }, { t: "Sherpas", d: "Gestion du temps.", l: "https://sherpas.com/p/guide-soutien-scolaire/aider-gestion-temps-organisation.html" }, { t: "Le Social", d: "Sans rencontre.", l: "https://www.lesocial.fr/formation/1695-formation-a-distance-comment-accompagner-les-apprenants-quon-ne-rencontre-pas" }],
+                inter: [{ t: "OpenEdition - FOAD", d: "Approches techno.", l: "https://journals.openedition.org/dms/9061" }, { t: "EduQuest", d: "Autonomie.", l: "https://www.eduquest.fr/soutien-scolaire-a-domicile-comment-concilier-autonomie-et-encadrement/" }, { t: "WALT - Soutien", d: "Individualisation.", l: "https://www.walt-asso.fr/strategies-soutien-pedagogiques-individualisation-apprentissage/" }],
+                expert: [{ t: "Cabestan - AFEST", d: "Pratique réflexive.", l: "https://www.cabestan-formation.fr/formation-devenir-accompagnateur-afest-2-jours/" }, { t: "Icademie", d: "IA adaptive.", l: "https://www.icademie.com/fr/guide/les-differences-entre-formation-a-distance-fad-et-foad" }]
+            }
+        };
+
+        const ARCHETYPES = {
+            stratège: { t: "Le Stratège", d: "Profil équilibré. Vous jonglez avec brio entre technique, pédagogie et accompagnement." },
+            architecte: { t: "L'Architecte", d: "Expert en planification. Votre force réside dans le design pédagogique et la structure." },
+            facilitateur: { t: "Le Facilitateur", d: "L'humain est au cœur. Vous privilégiez un encadrement bienveillant et un soutien constant." },
+            explorateur: { t: "L'Explorateur Techno", d: "Maître des outils. Vous dynamisez vos cours par l'innovation et les ressources multimédias." }
+        };
+
+        // --- COMPOSANT APP ---
+        const App = () => {
+            const [userData, setUserData] = useState(() => {
+                try {
+                  const saved = localStorage.getItem('fad_positioning_v2');
+                  return saved ? JSON.parse(saved) : {
+                      name: '',
+                      answers: {},
+                      notes: {},
+                      isDarkMode: false
+                  };
+                } catch (e) {
+                  return { name: '', answers: {}, notes: {}, isDarkMode: false };
+                }
+            });
+
+            const [lastSaved, setLastSaved] = useState(null);
+            const [showSaveIcon, setShowSaveIcon] = useState(false);
+
+            useEffect(() => {
+                localStorage.setItem('fad_positioning_v2', JSON.stringify(userData));
+                setLastSaved(new Date().toLocaleTimeString());
+                setShowSaveIcon(true);
+                const timer = setTimeout(() => setShowSaveIcon(false), 2000);
+                return () => clearTimeout(timer);
+            }, [userData]);
+
+            const handleAnswer = (questionId, value) => {
+                setUserData(prev => ({
+                    ...prev,
+                    answers: { ...prev.answers, [questionId]: value }
+                }));
+            };
+
+            const handleNote = (catId, value) => {
+                setUserData(prev => ({
+                    ...prev,
+                    notes: { ...prev.notes, [catId]: value }
+                }));
+            };
+
+            const toggleDarkMode = () => {
+                setUserData(prev => ({ ...prev, isDarkMode: !prev.isDarkMode }));
+            };
+
+            const stats = useMemo(() => {
+                const catStats = QUESTIONS.map(cat => {
+                    const answers = cat.q
+                        .map(q => userData.answers[q.id])
+                        .filter(a => a !== undefined);
+                    
+                    const avg = answers.length > 0 ? answers.reduce((a, b) => a + b, 0) / answers.length : 0;
+                    const count = answers.length;
+                    
+                    return { 
+                        id: cat.id, 
+                        name: cat.cat, 
+                        avg, 
+                        count,
+                        total: cat.q.length,
+                        progress: (count / cat.q.length) * 100
+                    };
+                });
+
+                const totalAnswered = Object.keys(userData.answers).length;
+                const globalSum = Object.values(userData.answers).reduce((a, b) => a + b, 0);
+                const globalAvg = totalAnswered > 0 ? globalSum / totalAnswered : 0;
+
+                return { catStats, globalAvg, totalAnswered };
+            }, [userData.answers]);
+
+            const archetype = useMemo(() => {
+                if (stats.totalAnswered < 5) return null;
+                const avgs = stats.catStats.map(s => s.avg);
+                const maxVal = Math.max(...avgs);
+                const minVal = Math.min(...avgs);
+                if (stats.globalAvg > 2.3 && (maxVal - minVal < 0.7)) return ARCHETYPES.stratège;
+                const maxIdx = avgs.indexOf(maxVal);
+                switch(maxIdx) {
+                    case 0: return ARCHETYPES.architecte;
+                    case 3: return ARCHETYPES.facilitateur;
+                    case 2: return ARCHETYPES.explorateur;
+                    default: return ARCHETYPES.stratège;
+                }
+            }, [stats]);
+
+            const resetForm = () => {
+                if (window.confirm("Voulez-vous vraiment réinitialiser toutes vos réponses ?")) {
+                    setUserData({ name: '', answers: {}, notes: {}, isDarkMode: userData.isDarkMode });
+                }
+            };
+
+            const exportJSON = () => {
+                const blob = new Blob([JSON.stringify(userData)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `bilan_fad_${userData.name || 'export'}.json`;
+                a.click();
+            };
+
+            const exportPDF = useCallback(() => {
+                const element = document.getElementById('report-content');
+                if (!element) return;
+                const opt = {
+                    margin: 0.5,
+                    filename: `PlanFAD_${userData.name || 'Bilan'}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2 },
+                    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+                };
+                window.html2pdf().set(opt).from(element).save();
+            }, [userData.name]);
+
+            const getLevelColor = (avg) => {
+                if (avg === 0) return '#cbd5e1';
+                if (avg <= 1.6) return '#f59e0b';
+                if (avg <= 2.4) return '#0ea5e9';
+                return '#10b981';
+            };
+
+            const getLevelLabel = (avg) => {
+                if (avg === 0) return "À DÉTERMINER";
+                if (avg <= 1.6) return "DÉBUTANT";
+                if (avg <= 2.4) return "INTERMÉDIAIRE";
+                return "AVANCÉ";
+            };
+
+            const chartData = stats.catStats.map(s => ({
+                name: s.name.split(' ')[0],
+                fullName: s.name,
+                score: s.avg,
+                color: getLevelColor(s.avg)
+            }));
+
+            return (
+                <div className={`min-h-screen flex flex-col ${userData.isDarkMode ? 'dark bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'}`}>
+                    <header className={`sticky top-0 z-50 px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4 shadow-md no-print ${userData.isDarkMode ? 'bg-slate-900' : 'bg-white border-b'}`}>
+                        <div className="flex items-center gap-4">
+                            <div className="bg-indigo-600 p-2 rounded-lg text-white">
+                                <GraduationCap size={28} />
+                            </div>
+                            <div>
+                                <h1 className="text-xl font-bold tracking-tight">Positionnement FAD Autoportant</h1>
+                                <div className="flex items-center gap-2 mt-1">
+                                    <span className="text-xs uppercase font-semibold text-indigo-500">Profil :</span>
+                                    <input 
+                                        type="text" 
+                                        value={userData.name}
+                                        onChange={(e) => setUserData(prev => ({ ...prev, name: e.target.value }))}
+                                        placeholder="Votre nom" 
+                                        className={`text-sm font-medium bg-transparent border-b border-indigo-200 focus:border-indigo-500 focus:outline-none px-1 transition-all ${userData.isDarkMode ? 'text-white' : 'text-slate-800'}`}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2 flex-wrap justify-center">
+                            <button onClick={resetForm} className="p-2 rounded-full hover:bg-red-50 text-red-500 transition-colors" title="Réinitialiser"><RotateCcw size={20} /></button>
+                            <button onClick={exportJSON} className="p-2 rounded-full hover:bg-blue-50 text-blue-500 transition-colors" title="Sauvegarder JSON"><Save size={20} /></button>
+                            <button onClick={exportPDF} className="p-2 rounded-full hover:bg-emerald-50 text-emerald-500 transition-colors" title="Plan PDF"><FileText size={20} /></button>
+                            <button onClick={() => window.print()} className="p-2 rounded-full hover:bg-slate-100 text-slate-500 transition-colors" title="Imprimer"><Printer size={20} /></button>
+                            <div className="w-px h-6 bg-slate-200 mx-2" />
+                            <button onClick={toggleDarkMode} className="p-2 rounded-full hover:bg-indigo-50 text-indigo-500 transition-colors">
+                                {userData.isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+                            </button>
+                            {showSaveIcon && <div className="flex items-center gap-1 text-xs text-indigo-400 animate-pulse ml-2"><Cloud size={14} /><span>Auto-save</span></div>}
+                        </div>
+                    </header>
+
+                    <main className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+                        <section className={`lg:w-1/2 overflow-y-auto px-6 py-8 space-y-12 border-r no-print ${userData.isDarkMode ? 'border-slate-800' : 'border-slate-200'}`}>
+                            {QUESTIONS.map((cat) => (
+                                <div key={cat.id} className="space-y-6">
+                                    <div className="flex items-center justify-between sticky top-0 py-2 z-10 bg-inherit border-b border-indigo-100">
+                                        <div className="flex items-center gap-3">
+                                            <div className={`p-2 rounded-md ${cat.id === 0 ? 'bg-amber-100 text-amber-600' : cat.id === 1 ? 'bg-sky-100 text-sky-600' : cat.id === 2 ? 'bg-emerald-100 text-emerald-600' : 'bg-purple-100 text-purple-600'}`}>
+                                                {cat.id === 0 ? <Layout size={20} /> : cat.id === 1 ? <ChevronRight size={20} /> : cat.id === 2 ? <BookOpen size={20} /> : <Users size={20} />}
+                                            </div>
+                                            <h3 className="text-lg font-bold uppercase tracking-tight">{cat.id + 1}. {cat.cat}</h3>
+                                        </div>
+                                        <div className="text-sm font-bold px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full">{Math.round(stats.catStats[cat.id].progress)}%</div>
+                                    </div>
+                                    <div className="space-y-4">
+                                        {cat.q.map((q) => (
+                                            <div key={q.id} className={`p-5 rounded-xl border transition-all duration-200 ${userData.answers[q.id] ? (userData.isDarkMode ? 'bg-slate-900/50 border-indigo-900/50' : 'bg-indigo-50/30 border-indigo-100') : (userData.isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200')}`}>
+                                                <p className="font-semibold mb-4 text-sm leading-relaxed">{q.t}</p>
+                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                                    {[ { val: 1, label: q.a, char: 'A' }, { val: 2, label: q.b, char: 'B' }, { val: 3, label: q.c, char: 'C' } ].map((opt) => (
+                                                        <button key={opt.val} onClick={() => handleAnswer(q.id, opt.val)} className={`text-left p-3 rounded-lg text-xs transition-all ${userData.answers[q.id] === opt.val ? 'bg-indigo-600 text-white shadow-md' : (userData.isDarkMode ? 'bg-slate-800 hover:bg-slate-700 text-slate-300' : 'bg-white border hover:bg-indigo-50 text-slate-600')}`}>
+                                                            <span className={`inline-block w-5 h-5 text-center leading-5 rounded-md mr-2 font-bold text-[10px] ${userData.answers[q.id] === opt.val ? 'bg-white/20' : 'bg-slate-200 text-slate-500'}`}>{opt.char}</span>
+                                                            {opt.label}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <textarea value={userData.notes[cat.id] || ''} onChange={(e) => handleNote(cat.id, e.target.value)} placeholder="Notes & réflexions..." className={`w-full p-4 rounded-xl text-xs h-20 resize-none border focus:ring-2 focus:ring-indigo-500 transition-all ${userData.isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`} />
+                                </div>
+                            ))}
+                        </section>
+
+                        <section className={`lg:w-1/2 overflow-y-auto px-6 py-8 ${userData.isDarkMode ? 'bg-slate-900/30' : 'bg-slate-100/50'}`}>
+                            <div id="report-content" className="space-y-8">
+                                <div className={`p-8 rounded-2xl shadow-xl transition-all glass-panel ${userData.isDarkMode ? 'bg-slate-900 border border-slate-800' : 'bg-white'}`}>
+                                    <div className="flex flex-col items-center text-center space-y-6">
+                                        <div>
+                                            <span className="text-xs font-bold text-indigo-500 uppercase tracking-widest">Maîtrise Globale</span>
+                                            <h2 className="text-4xl font-black mt-1" style={{ color: getLevelColor(stats.globalAvg) }}>{stats.globalAvg.toFixed(2)}</h2>
+                                            <p className="text-sm font-bold mt-1 opacity-80">{getLevelLabel(stats.globalAvg)}</p>
+                                        </div>
+                                        <div className="w-full h-40">
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <BarChart data={chartData}>
+                                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={userData.isDarkMode ? '#334155' : '#e2e8f0'} />
+                                                    <XAxis dataKey="name" fontSize={10} axisLine={false} tickLine={false} />
+                                                    <YAxis domain={[0, 3]} fontSize={10} axisLine={false} tickLine={false} />
+                                                    <ReChartsTooltip contentStyle={{ backgroundColor: userData.isDarkMode ? '#0f172a' : '#fff', border: 'none', borderRadius: '8px' }} />
+                                                    <Bar dataKey="score" radius={[4, 4, 0, 0]} barSize={40}>
+                                                        {chartData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
+                                                    </Bar>
+                                                </BarChart>
+                                            </ResponsiveContainer>
+                                        </div>
+                                        {archetype && (
+                                            <div className={`p-6 rounded-xl border-2 ${userData.isDarkMode ? 'bg-slate-800/50 border-indigo-900/50' : 'bg-indigo-50 border-indigo-200'}`}>
+                                                <div className="inline-block px-4 py-1 rounded-full bg-indigo-600 text-white text-[10px] font-black uppercase tracking-tighter mb-2">Profil : {archetype.t}</div>
+                                                <p className="text-xs leading-relaxed italic opacity-90">{archetype.d}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="space-y-6 pb-20">
+                                    <h3 className="text-xl font-black tracking-tight">Ressources Personnalisées</h3>
+                                    {stats.totalAnswered > 0 ? (
+                                        <div className="space-y-6">
+                                            {QUESTIONS.map((cat, idx) => {
+                                                const score = stats.catStats[idx].avg;
+                                                if (score === 0) return null;
+                                                const level = score <= 1.6 ? "debut" : (score <= 2.4 ? "inter" : "expert");
+                                                const color = getLevelColor(score);
+                                                return (
+                                                    <div key={cat.id} className={`overflow-hidden rounded-xl border ${userData.isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200 shadow-sm'}`}>
+                                                        <div className="p-3 flex items-center justify-between" style={{ backgroundColor: `${color}15`, borderLeft: `5px solid ${color}` }}>
+                                                            <span className="text-xs font-black uppercase tracking-tight" style={{ color: color }}>{cat.cat}</span>
+                                                            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: color }}>{getLevelLabel(score)}</span>
+                                                        </div>
+                                                        <div className="p-3 space-y-3">
+                                                            {RESOURCES[idx][level].map((res, i) => (
+                                                                <div key={i} className={`p-3 rounded-lg border flex justify-between items-center gap-3 ${userData.isDarkMode ? 'bg-slate-800/40 border-slate-700' : 'bg-slate-50 border-slate-100'}`}>
+                                                                    <div className="flex-1">
+                                                                        <h4 className="text-xs font-bold">{res.t}</h4>
+                                                                        <p className="text-[10px] mt-0.5 opacity-70 leading-relaxed">{res.d}</p>
+                                                                    </div>
+                                                                    <a href={res.l} target="_blank" rel="noopener noreferrer" className="p-2 bg-indigo-600 text-white rounded-md"><ExternalLink size={12} /></a>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    ) : (
+                                        <div className="text-center p-12 text-slate-400 text-xs italic">Répondez aux questions pour voir vos recommandations.</div>
+                                    )}
+                                </div>
+                            </div>
+                        </section>
+                    </main>
+
+                    <footer className={`py-3 text-center text-[10px] border-t no-print ${userData.isDarkMode ? 'bg-slate-900 border-slate-800 text-slate-500' : 'bg-white border-slate-200 text-slate-400'}`}>
+                        Bilan FAD Autoportant © 2024 - Dernière sauvegarde : {lastSaved || 'aucune'}
+                    </footer>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<React.StrictMode><App /></React.StrictMode>);
+    </script>
+</body>
+</html>
