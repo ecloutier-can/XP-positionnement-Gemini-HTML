@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -84,7 +83,7 @@
         } from 'recharts';
         import { 
             RotateCcw, Save, FileText, Printer, Moon, Sun, ChevronRight, ExternalLink,
-            BookOpen, Users, Layout, GraduationCap, Cloud, ListChecks
+            BookOpen, Users, Layout, Cpu, Cloud, ListChecks
         } from 'lucide-react';
 
         // --- DONNÉES ---
@@ -336,10 +335,10 @@
                     <header className={`sticky top-0 z-50 px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4 shadow-md no-print ${userData.isDarkMode ? 'bg-slate-900' : 'bg-white border-b'}`}>
                         <div className="flex items-center gap-4">
                             <div className="bg-indigo-600 p-2 rounded-lg text-white">
-                                <GraduationCap size={28} />
+                                <Cpu size={28} />
                             </div>
                             <div>
-                                <h1 className="text-xl font-bold tracking-tight">Positionnement FAD Autoportant</h1>
+                                <h1 className="text-xl font-bold tracking-tight">Débuter en FAD...de l'aide à ma mesure.</h1>
                                 <div className="flex items-center gap-2 mt-1">
                                     <span className="text-xs uppercase font-semibold text-indigo-500">Profil :</span>
                                     <input 
