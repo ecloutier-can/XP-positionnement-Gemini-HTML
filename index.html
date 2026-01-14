@@ -48,25 +48,28 @@
             visibility: hidden;
             position: absolute;
             z-index: 100;
-            bottom: -30px;
+            bottom: -35px;
             left: 50%;
             transform: translateX(-50%);
             background-color: #1e293b;
             color: #fff;
             text-align: center;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 10px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
             white-space: nowrap;
             opacity: 0;
-            transition: opacity 0.2s;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
         }
         .dark .tooltip-text {
-            background-color: #475569;
+            background-color: #334155;
         }
         .tooltip-container:hover .tooltip-text {
             visibility: visible;
             opacity: 1;
+            bottom: -40px;
         }
     </style>
 </head>
@@ -81,7 +84,7 @@
         } from 'recharts';
         import { 
             RotateCcw, Save, FileText, Printer, Moon, Sun, ChevronRight, ExternalLink,
-            BookOpen, Users, Layout, GraduationCap, Cloud, MapPin
+            BookOpen, Users, Layout, GraduationCap, Cloud, ListChecks
         } from 'lucide-react';
 
         // --- DONNÉES ---
@@ -344,12 +347,16 @@
                         </div>
 
                         {/* Navigation Rapide */}
-                        <nav className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-xl shadow-inner mx-4">
+                        <nav className="flex items-center bg-slate-100 dark:bg-slate-800 p-1.5 rounded-xl shadow-inner mx-4">
+                            <div className="tooltip-container mr-2 px-2 border-r border-slate-200 dark:border-slate-700">
+                                <ListChecks size={18} className="text-slate-400" />
+                                <span className="tooltip-text">Navigation</span>
+                            </div>
                             {QUESTIONS.map((cat, idx) => (
                                 <div key={cat.id} className="tooltip-container">
                                     <button 
                                         onClick={() => scrollToSection(cat.id)}
-                                        className={`flex items-center justify-center w-9 h-9 rounded-lg transition-all ${stats.catStats[idx].progress === 100 ? 'text-emerald-500' : 'text-slate-500 hover:bg-white dark:hover:bg-slate-700'}`}
+                                        className={`flex items-center justify-center w-9 h-9 rounded-lg transition-all ${stats.catStats[idx].progress === 100 ? 'text-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'text-slate-500 hover:bg-white dark:hover:bg-slate-700'}`}
                                     >
                                         {cat.icon}
                                     </button>
@@ -457,6 +464,21 @@
                                         )}
                                     </div>
                                 </div>
+
+                                {/* Section Notes et Réflexions pour le PDF */}
+                                {Object.values(userData.notes).some(note => note && note.trim() !== '') && (
+                                    <div className="space-y-6 pt-10 border-t border-slate-200 dark:border-slate-700">
+                                        <h3 className="text-xl font-black tracking-tight">Notes & Réflexions</h3>
+                                        <div className="grid grid-cols-1 gap-4">
+                                            {QUESTIONS.map((cat) => userData.notes[cat.id] && userData.notes[cat.id].trim() !== '' && (
+                                                <div key={cat.id} className={`p-5 rounded-xl border ${userData.isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100 shadow-sm'}`}>
+                                                    <h4 className="text-[10px] font-black uppercase text-indigo-500 mb-2 tracking-widest">{cat.cat}</h4>
+                                                    <p className="text-xs leading-relaxed opacity-90 italic whitespace-pre-wrap">"{userData.notes[cat.id]}"</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
 
                                 <div className="space-y-6 pb-20">
                                     <h3 className="text-xl font-black tracking-tight">Ressources Personnalisées</h3>
