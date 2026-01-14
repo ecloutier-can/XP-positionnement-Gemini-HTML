@@ -83,7 +83,7 @@
         } from 'recharts';
         import { 
             RotateCcw, Save, FileText, Printer, Moon, Sun, ChevronRight, ExternalLink,
-            BookOpen, Users, Layout, Cpu, Cloud, ListChecks
+            BookOpen, Users, Layout, Cpu, Cloud, ListChecks, Upload
         } from 'lucide-react';
 
         // --- DONNÉES ---
@@ -187,6 +187,7 @@
             const [lastSaved, setLastSaved] = useState(null);
             const [showSaveIcon, setShowSaveIcon] = useState(false);
             const scrollContainerRef = useRef(null);
+            const fileInputRef = useRef(null);
 
             useEffect(() => {
                 localStorage.setItem('fad_positioning_v2', JSON.stringify(userData));
@@ -268,6 +269,35 @@
                 a.href = url;
                 a.download = `bilan_fad_${userData.name || 'export'}.json`;
                 a.click();
+            };
+
+            const handleImportClick = () => {
+                if (fileInputRef.current) {
+                    fileInputRef.current.click();
+                }
+            };
+
+            const onFileChange = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const importedData = JSON.parse(event.target.result);
+                        if (importedData && typeof importedData === 'object') {
+                            setUserData({
+                                name: importedData.name || '',
+                                answers: importedData.answers || {},
+                                notes: importedData.notes || {},
+                                isDarkMode: importedData.isDarkMode !== undefined ? importedData.isDarkMode : userData.isDarkMode
+                            });
+                        }
+                    } catch (err) {
+                        alert("Erreur lors de la lecture du fichier. Assurez-vous qu'il s'agit d'un fichier JSON valide généré par cette application.");
+                    }
+                };
+                reader.readAsText(file);
+                e.target.value = null; // Reset input
             };
 
             const exportPDF = useCallback(() => {
@@ -380,12 +410,27 @@
                                 label="Réinitialiser" 
                                 colorClass="hover:bg-red-50 text-red-500" 
                             />
-                            <HeaderButton 
-                                onClick={exportJSON} 
-                                icon={<Save size={20} />} 
-                                label="Enregistrer" 
-                                colorClass="hover:bg-blue-50 text-blue-500" 
-                            />
+                            <div className="flex items-center gap-1">
+                                <HeaderButton 
+                                    onClick={handleImportClick} 
+                                    icon={<Upload size={20} />} 
+                                    label="Ouvrir" 
+                                    colorClass="hover:bg-blue-50 text-blue-500" 
+                                />
+                                <input 
+                                    type="file" 
+                                    ref={fileInputRef} 
+                                    onChange={onFileChange} 
+                                    accept=".json" 
+                                    className="hidden" 
+                                />
+                                <HeaderButton 
+                                    onClick={exportJSON} 
+                                    icon={<Save size={20} />} 
+                                    label="Enregistrer" 
+                                    colorClass="hover:bg-blue-50 text-blue-500" 
+                                />
+                            </div>
                             <HeaderButton 
                                 onClick={exportPDF} 
                                 icon={<FileText size={20} />} 
