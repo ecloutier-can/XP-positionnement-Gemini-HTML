@@ -37,20 +37,51 @@
         @media print {
             .no-print { display: none !important; }
         }
+        .scroll-smooth-container {
+            scroll-behavior: smooth;
+        }
+        /* Custom Tooltip simple */
+        .tooltip-container {
+            position: relative;
+        }
+        .tooltip-text {
+            visibility: hidden;
+            position: absolute;
+            z-index: 100;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #1e293b;
+            color: #fff;
+            text-align: center;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .dark .tooltip-text {
+            background-color: #475569;
+        }
+        .tooltip-container:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 transition-colors duration-300">
     <div id="root"></div>
 
     <script type="text/babel" data-type="module">
-        import React, { useState, useEffect, useMemo, useCallback } from 'react';
+        import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
         import ReactDOM from 'react-dom/client';
         import { 
             BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as ReChartsTooltip, ResponsiveContainer, Cell 
         } from 'recharts';
         import { 
             RotateCcw, Save, FileText, Printer, Moon, Sun, ChevronRight, ExternalLink,
-            BookOpen, Users, Layout, GraduationCap, Cloud
+            BookOpen, Users, Layout, GraduationCap, Cloud, MapPin
         } from 'lucide-react';
 
         // --- DONNÉES ---
@@ -58,6 +89,7 @@
             {
                 id: 0,
                 cat: "ÉLABORATION DU COURS",
+                icon: <Layout size={18} />,
                 q: [
                     { id: "q1", t: "1.1 Modèle utilisé (ADDIE, MISA) ?", a: "Non, expérience présentiel", b: "Pas systématiquement", c: "Régulièrement adapté" },
                     { id: "q2", t: "1.2 Test des outils technologiques ?", a: "Non", b: "Quelques outils", c: "Tout testé" },
@@ -69,6 +101,7 @@
             {
                 id: 1,
                 cat: "DÉMARCHE D'APPRENTISSAGE",
+                icon: <ChevronRight size={18} />,
                 q: [
                     { id: "q6", t: "2.1 Respect de la Triple concordance ?", a: "Pas toujours", b: "Inégal", c: "Systématique" },
                     { id: "q7", t: "2.2 Variété des activités ?", a: "Lectures", b: "Moyenne", c: "Grande variété" },
@@ -80,6 +113,7 @@
             {
                 id: 2,
                 cat: "ORGANISATION DU COURS",
+                icon: <BookOpen size={18} />,
                 q: [
                     { id: "q11", t: "3.1 Plan d'études spécifique FAD ?", a: "Adapté présentiel", b: "Incomplet", c: "Complet" },
                     { id: "q12", t: "3.2 Interface numérique ?", a: "Décousu", b: "Peu intuitif", c: "Convivial" },
@@ -91,6 +125,7 @@
             {
                 id: 3,
                 cat: "ENCADREMENT DES APPRENANTS",
+                icon: <Users size={18} />,
                 q: [
                     { id: "q16", t: "4.1 Accueil des apprenants ?", a: "Débrouillardise", b: "Message simple", c: "Séance structurée" },
                     { id: "q17", t: "4.2 Formation aux outils ?", a: "Supposé acquis", b: "Guides", c: "Proactif" },
@@ -149,6 +184,7 @@
 
             const [lastSaved, setLastSaved] = useState(null);
             const [showSaveIcon, setShowSaveIcon] = useState(false);
+            const scrollContainerRef = useRef(null);
 
             useEffect(() => {
                 localStorage.setItem('fad_positioning_v2', JSON.stringify(userData));
@@ -245,6 +281,13 @@
                 window.html2pdf().set(opt).from(element).save();
             }, [userData.name]);
 
+            const scrollToSection = (id) => {
+                const element = document.getElementById(`section-${id}`);
+                if (element && scrollContainerRef.current) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            };
+
             const getLevelColor = (avg) => {
                 if (avg === 0) return '#cbd5e1';
                 if (avg <= 1.6) return '#f59e0b';
@@ -265,6 +308,18 @@
                 score: s.avg,
                 color: getLevelColor(s.avg)
             }));
+
+            const HeaderButton = ({ onClick, icon, label, colorClass }) => (
+                <div className="tooltip-container">
+                    <button 
+                        onClick={onClick} 
+                        className={`p-2 rounded-full transition-colors ${colorClass}`}
+                    >
+                        {icon}
+                    </button>
+                    <span className="tooltip-text">{label}</span>
+                </div>
+            );
 
             return (
                 <div className={`min-h-screen flex flex-col ${userData.isDarkMode ? 'dark bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'}`}>
@@ -287,27 +342,66 @@
                                 </div>
                             </div>
                         </div>
+
+                        {/* Navigation Rapide */}
+                        <nav className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-xl shadow-inner mx-4">
+                            {QUESTIONS.map((cat, idx) => (
+                                <div key={cat.id} className="tooltip-container">
+                                    <button 
+                                        onClick={() => scrollToSection(cat.id)}
+                                        className={`flex items-center justify-center w-9 h-9 rounded-lg transition-all ${stats.catStats[idx].progress === 100 ? 'text-emerald-500' : 'text-slate-500 hover:bg-white dark:hover:bg-slate-700'}`}
+                                    >
+                                        {cat.icon}
+                                    </button>
+                                    <span className="tooltip-text">{cat.cat.split(' ')[0]}</span>
+                                </div>
+                            ))}
+                        </nav>
+
                         <div className="flex items-center gap-2 flex-wrap justify-center">
-                            <button onClick={resetForm} className="p-2 rounded-full hover:bg-red-50 text-red-500 transition-colors" title="Réinitialiser"><RotateCcw size={20} /></button>
-                            <button onClick={exportJSON} className="p-2 rounded-full hover:bg-blue-50 text-blue-500 transition-colors" title="Sauvegarder JSON"><Save size={20} /></button>
-                            <button onClick={exportPDF} className="p-2 rounded-full hover:bg-emerald-50 text-emerald-500 transition-colors" title="Plan PDF"><FileText size={20} /></button>
-                            <button onClick={() => window.print()} className="p-2 rounded-full hover:bg-slate-100 text-slate-500 transition-colors" title="Imprimer"><Printer size={20} /></button>
+                            <HeaderButton 
+                                onClick={resetForm} 
+                                icon={<RotateCcw size={20} />} 
+                                label="Réinitialiser" 
+                                colorClass="hover:bg-red-50 text-red-500" 
+                            />
+                            <HeaderButton 
+                                onClick={exportJSON} 
+                                icon={<Save size={20} />} 
+                                label="Sauvegarder" 
+                                colorClass="hover:bg-blue-50 text-blue-500" 
+                            />
+                            <HeaderButton 
+                                onClick={exportPDF} 
+                                icon={<FileText size={20} />} 
+                                label="PDF" 
+                                colorClass="hover:bg-emerald-50 text-emerald-500" 
+                            />
+                            <HeaderButton 
+                                onClick={() => window.print()} 
+                                icon={<Printer size={20} />} 
+                                label="Imprimer" 
+                                colorClass="hover:bg-slate-100 text-slate-500" 
+                            />
                             <div className="w-px h-6 bg-slate-200 mx-2" />
-                            <button onClick={toggleDarkMode} className="p-2 rounded-full hover:bg-indigo-50 text-indigo-500 transition-colors">
-                                {userData.isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-                            </button>
-                            {showSaveIcon && <div className="flex items-center gap-1 text-xs text-indigo-400 animate-pulse ml-2"><Cloud size={14} /><span>Auto-save</span></div>}
+                            <HeaderButton 
+                                onClick={toggleDarkMode} 
+                                icon={userData.isDarkMode ? <Sun size={20} /> : <Moon size={20} />} 
+                                label="Thème" 
+                                colorClass="hover:bg-indigo-50 text-indigo-500" 
+                            />
+                            {showSaveIcon && <div className="flex items-center gap-1 text-xs text-indigo-400 animate-pulse ml-2"><Cloud size={14} /><span>Auto</span></div>}
                         </div>
                     </header>
 
                     <main className="flex-1 flex flex-col lg:flex-row overflow-hidden">
-                        <section className={`lg:w-1/2 overflow-y-auto px-6 py-8 space-y-12 border-r no-print ${userData.isDarkMode ? 'border-slate-800' : 'border-slate-200'}`}>
+                        <section ref={scrollContainerRef} className={`lg:w-1/2 overflow-y-auto px-6 py-8 space-y-12 border-r no-print scroll-smooth-container ${userData.isDarkMode ? 'border-slate-800' : 'border-slate-200'}`}>
                             {QUESTIONS.map((cat) => (
-                                <div key={cat.id} className="space-y-6">
+                                <div key={cat.id} id={`section-${cat.id}`} className="space-y-6 pt-4">
                                     <div className="flex items-center justify-between sticky top-0 py-2 z-10 bg-inherit border-b border-indigo-100">
                                         <div className="flex items-center gap-3">
                                             <div className={`p-2 rounded-md ${cat.id === 0 ? 'bg-amber-100 text-amber-600' : cat.id === 1 ? 'bg-sky-100 text-sky-600' : cat.id === 2 ? 'bg-emerald-100 text-emerald-600' : 'bg-purple-100 text-purple-600'}`}>
-                                                {cat.id === 0 ? <Layout size={20} /> : cat.id === 1 ? <ChevronRight size={20} /> : cat.id === 2 ? <BookOpen size={20} /> : <Users size={20} />}
+                                                {cat.icon}
                                             </div>
                                             <h3 className="text-lg font-bold uppercase tracking-tight">{cat.id + 1}. {cat.cat}</h3>
                                         </div>
