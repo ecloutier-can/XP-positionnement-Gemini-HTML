@@ -89,82 +89,104 @@
         } from 'recharts';
         import { 
             RotateCcw, Save, FileText, Printer, Moon, Sun, ChevronRight, ExternalLink,
-            BookOpen, Users, Layout, Cpu, Cloud, ListChecks, Upload
+            BookOpen, Users, Layout, Cpu, Cloud, ListChecks, Upload, Globe, ShieldCheck, CheckCircle
         } from 'lucide-react';
 
-        // --- DONNÉES ---
+        // --- DONNÉES DU PDF ---
         const QUESTIONS = [
             {
                 id: 0,
-                cat: "ÉLABORATION DU COURS",
+                cat: "Élaboration du cours",
                 icon: <Layout size={18} />,
                 q: [
-                    { id: "q1", t: "1.1 Modèle utilisé (ADDIE, MISA) ?", a: "Non, expérience présentiel", b: "Pas systématiquement", c: "Régulièrement adapté" },
-                    { id: "q2", t: "1.2 Test des outils technologiques ?", a: "Non", b: "Quelques outils", c: "Tout testé" },
-                    { id: "q3", t: "1.3 Consultation ressources existantes ?", a: "Tout créer", b: "Occasionnellement", c: "Inventaire complet" },
-                    { id: "q4", t: "1.4 Équipe multidisciplinaire ?", a: "Seul", b: "Ponctuellement", c: "Équipe complète" },
-                    { id: "q5", t: "1.5 Plan d'amélioration continue ?", a: "Non", b: "Commentaires", c: "Plan formel" }
+                    { id: "q1_1", t: "1.1 Je structure mon cours en modules", a: "Non", b: "Partiellement", c: "Oui, avec objectifs clairs" },
+                    { id: "q1_2", t: "1.2 J'intègre des objectifs d'apprentissage", a: "Non", b: "Quelques objectifs", c: "Objectifs complets et mesurables" },
+                    { id: "q1_3", t: "1.3 Je planifie des activités interactives", a: "Non", b: "Occasionnellement", c: "Oui, régulièrement" },
+                    { id: "q1_4", t: "1.4 J'utilise des scénarios pédagogiques", a: "Non", b: "Quelques scénarios", c: "Oui, adaptés à la FAD" },
+                    { id: "q1_5", t: "1.5 Je prévois des ressources variées", a: "Non", b: "Quelques ressources", c: "Oui, diversifiées et accessibles" }
                 ]
             },
             {
                 id: 1,
-                cat: "DÉMARCHE D'APPRENTISSAGE",
-                icon: <ChevronRight size={18} />,
+                cat: "Interaction avec les apprenants",
+                icon: <Users size={18} />,
                 q: [
-                    { id: "q6", t: "2.1 Respect de la Triple concordance ?", a: "Pas toujours", b: "Inégal", c: "Systématique" },
-                    { id: "q7", t: "2.2 Variété des activités ?", a: "Lectures", b: "Moyenne", c: "Grande variété" },
-                    { id: "q8", t: "2.3 Choix offerts aux apprenants ?", a: "Parcours unique", b: "Limité", c: "Plusieurs chemins" },
-                    { id: "q9", t: "2.4 Structure du contenu ?", a: "Cours longs", b: "Unités larges", c: "Éléments ciblés" },
-                    { id: "q10", t: "2.5 Clarté des attentes ?", a: "À déduire", b: "Ponctuelle", c: "Critères affichés" }
+                    { id: "q2_1", t: "2.1 Je communique régulièrement avec mes étudiants", a: "Rarement", b: "Parfois", c: "Oui, chaque semaine" },
+                    { id: "q2_2", t: "2.2 J'utilise des forums de discussion", a: "Non", b: "Occasionnellement", c: "Oui, activement" },
+                    { id: "q2_3", t: "2.3 Je propose des rétroactions personnalisées", a: "Non", b: "Parfois", c: "Oui, systématiquement" },
+                    { id: "q2_4", t: "2.4 J'organise des rencontres virtuelles", a: "Non", b: "Occasionnellement", c: "Oui, régulièrement" },
+                    { id: "q2_5", t: "2.5 Je favorise la collaboration entre étudiants", a: "Non", b: "Parfois", c: "Oui, avec outils collaboratifs" }
                 ]
             },
             {
                 id: 2,
-                cat: "ORGANISATION DU COURS",
-                icon: <BookOpen size={18} />,
+                cat: "Évaluation en ligne",
+                icon: <ListChecks size={18} />,
                 q: [
-                    { id: "q11", t: "3.1 Plan d'études spécifique FAD ?", a: "Adapté présentiel", b: "Incomplet", c: "Complet" },
-                    { id: "q12", t: "3.2 Interface numérique ?", a: "Décousu", b: "Peu intuitif", c: "Convivial" },
-                    { id: "q13", t: "3.3 Ressources multimédias ?", a: "Texte/PDF", b: "Vidéos simples", c: "Interactif/Podcast" },
-                    { id: "q14", t: "3.4 Choix justifiés ?", a: "Populaires", b: "Besoins partiels", c: "Raison claire" },
-                    { id: "q15", t: "3.5 Équilibre Synchrone / Asynchrone ?", a: "Asynchrone", b: "Mélange inégal", c: "Équilibre pensé" }
+                    { id: "q3_1", t: "3.1 J'utilise des quiz en ligne", a: "Non", b: "Occasionnellement", c: "Oui, régulièrement" },
+                    { id: "q3_2", t: "3.2 Je propose des évaluations formatives", a: "Non", b: "Parfois", c: "Oui, systématiquement" },
+                    { id: "q3_3", t: "3.3 J'utilise des grilles de correction", a: "Non", b: "Occasionnellement", c: "Oui, pour chaque évaluation" },
+                    { id: "q3_4", t: "3.4 Je diversifie les types d'évaluation", a: "Non", b: "Parfois", c: "Oui, selon les objectifs" },
+                    { id: "q3_5", t: "3.5 Je donne des rétroactions rapides", a: "Non", b: "Parfois", c: "Oui, systématiquement" }
                 ]
             },
             {
                 id: 3,
-                cat: "ENCADREMENT DES APPRENANTS",
-                icon: <Users size={18} />,
+                cat: "Utilisation des outils numériques",
+                icon: <Cpu size={18} />,
                 q: [
-                    { id: "q16", t: "4.1 Accueil des apprenants ?", a: "Débrouillardise", b: "Message simple", c: "Séance structurée" },
-                    { id: "q17", t: "4.2 Formation aux outils ?", a: "Supposé acquis", b: "Guides", c: "Proactif" },
-                    { id: "q18", t: "4.3 Nétiquette et délais ?", a: "Non définis", b: "Peu clair", c: "Précis" },
-                    { id: "q19", t: "4.4 Soutien autonomie ?", a: "À eux de s'organiser", b: "Conseils", c: "Stratégies" },
-                    { id: "q20", t: "4.5 Engagement et AFEST ?", a: "Travaux", b: "Ponctuel", c: "Suivi régulier" }
+                    { id: "q4_1", t: "4.1 Je maîtrise la plateforme Moodle", a: "Non", b: "Partiellement", c: "Oui, complètement" },
+                    { id: "q4_2", t: "4.2 J'utilise des outils de visioconférence", a: "Non", b: "Occasionnellement", c: "Oui, régulièrement" },
+                    { id: "q4_3", t: "4.3 Je crée des vidéos pédagogiques", a: "Non", b: "Parfois", c: "Oui, pour chaque module" },
+                    { id: "q4_4", t: "4.4 J'utilise des outils collaboratifs", a: "Non", b: "Occasionnellement", c: "Oui, systématiquement" },
+                    { id: "q4_5", t: "4.5 Je sécurise les données des étudiants", a: "Non", b: "Partiellement", c: "Oui, selon les normes" }
+                ]
+            },
+            {
+                id: 4,
+                cat: "Accessibilité et inclusion",
+                icon: <Cloud size={18} />,
+                q: [
+                    { id: "q5_1", t: "5.1 Je propose des documents accessibles", a: "Non", b: "Occasionnellement", c: "Oui, systématiquement" },
+                    { id: "q5_2", t: "5.2 J'utilise des sous-titres dans mes vidéos", a: "Non", b: "Parfois", c: "Oui, toujours" },
+                    { id: "q5_3", t: "5.3 Je propose des alternatives aux contenus visuels", a: "Non", b: "Occasionnellement", c: "Oui, systématiquement" },
+                    { id: "q5_4", t: "5.4 Je respecte les normes WCAG", a: "Non", b: "Partiellement", c: "Oui, complètement" },
+                    { id: "q5_5", t: "5.5 Je favorise l'inclusion culturelle", a: "Non", b: "Occasionnellement", c: "Oui, systématiquement" }
                 ]
             }
         ];
 
-        const RESOURCES = {
-            0: {
-                debut: [{ t: "CADRE21 - Explorateur", d: "Structuration systémique.", l: "https://cadre21.org/groupe-de-cours/scenarisation-pedagogique-en-fad" }, { t: "TELUQ - Design", d: "Template pratique.", l: "https://jenseigneadistance.teluq.ca/mod/page/view.php?id=485" }, { t: "Wikipedia - ADDIE", d: "Théorie.", l: "https://fr.wikipedia.org/wiki/Modèle_ADDIE" }],
-                inter: [{ t: "CADRE21 - Architecte", d: "Design complexe.", l: "https://www.cadre21.org/axefad/" }, { t: "Cégep Trois-Rivières", d: "Modèles FAD.", l: "https://pratiquesfad.ca/quel-modele-choisir-ca-depend/" }],
-                expert: [{ t: "CADRE21 - Innovateur", d: "Leadership FAD.", l: "https://www.cadre21.org/axefad/" }, { t: "Beedeez", d: "Modèles avancés.", l: "https://www.beedeez.com/fr/blog/quest-ce-que-le-modele-addie" }]
-            },
-            1: {
-                debut: [{ t: "HEC Montréal - Alignement", d: "Triple concordance.", l: "https://enseigner.hec.ca/pedagogie/alignement-pedagogique/" }, { t: "CADRE21 - Pédagogie active", d: "Bases.", l: "https://cadre21.org/groupe-de-cours/pedagogie-active-en-fad" }, { t: "Formagora", d: "Méthode active.", l: "https://www.formagora.fr/actualites/quest-ce-que-la-methode-pedagogique-active-et-comment-la-pratiquer" }],
-                inter: [{ t: "CADRE21 - Répertoire", d: "20 stratégies.", l: "https://www.cadre21.org/axefad/repertoire-des-strategies-pedagogiques/" }, { t: "Univ. Bordeaux", d: "Alignement.", l: "https://enseigner.u-bordeaux.fr/politique-de-formation/" }],
-                expert: [{ t: "ENPC - Théories", d: "Innovation.", l: "https://pedagotheque.enpc.fr/2016/05/04/quest-ce-que-la-pedagogie-active/" }, { t: "BBF - Mode d'emploi", d: "Projets/Cas.", l: "https://bbf.enssib.fr/consulter/bbf-2018-16-0016-002" }]
-            },
-            2: {
-                debut: [{ t: "Moodle - Lancement", d: "Fonctionnalités.", l: "https://moodle.com/fr/" }, { t: "RÉCIT FAD - Technique", d: "Moodle/Outils.", l: "https://recitfad.ca/moodledocs/guide-conception-fad.html" }, { t: "Itslearning", d: "Optimisation.", l: "https://u2p-normandie.fr/optimiser-apprentissage-numerique/" }],
-                inter: [{ t: "AUF - Administration", d: "Gestion LMS.", l: "https://formations.auf.org/home/formation-ific/" }, { t: "RÉCIT FAD - Plugiciels", d: "Améliorer Moodle.", l: "https://ecolebranchee.com/plugiciels-sur-mesure-favoriser-apprentissage-moodle/" }],
-                expert: [{ t: "Moodle Workplace", d: "Personnalisation.", l: "https://moodle.com/fr/solutions/technologie-informatique/" }, { t: "FADIO - Ateliers", d: "Ingénierie réelle.", l: "https://fadio.net/evenements/semaine-de-la-formation-a-distance/ateliers-de-la-semaine-fad-2022/" }]
-            },
-            3: {
-                debut: [{ t: "The Conversation - Accompagner", d: "Motivation.", l: "https://theconversation.com/formation-a-distance-comment-accompagner-les-apprenants-quon-ne-rencontre-pas-241999" }, { t: "Sherpas", d: "Gestion du temps.", l: "https://sherpas.com/p/guide-soutien-scolaire/aider-gestion-temps-organisation.html" }, { t: "Le Social", d: "Sans rencontre.", l: "https://www.lesocial.fr/formation/1695-formation-a-distance-comment-accompagner-les-apprenants-quon-ne-rencontre-pas" }],
-                inter: [{ t: "OpenEdition - FOAD", d: "Approches techno.", l: "https://journals.openedition.org/dms/9061" }, { t: "EduQuest", d: "Autonomie.", l: "https://www.eduquest.fr/soutien-scolaire-a-domicile-comment-concilier-autonomie-et-encadrement/" }, { t: "WALT - Soutien", d: "Individualisation.", l: "https://www.walt-asso.fr/strategies-soutien-pedagogiques-individualisation-apprentissage/" }],
-                expert: [{ t: "Cabestan - AFEST", d: "Pratique réflexive.", l: "https://www.cabestan-formation.fr/formation-devenir-accompagnateur-afest-2-jours/" }, { t: "Icademie", d: "IA adaptive.", l: "https://www.icademie.com/fr/guide/les-differences-entre-formation-a-distance-fad-et-foad" }]
-            }
+        // --- RESSOURCES EXTRAITES DU PDF ---
+        const RESOURCES_MAP = {
+            "q1_1": ["https://docs.moodle.org", "https://www.open.edu/openlearn/", "https://unesdoc.unesco.org/"],
+            "q1_2": ["https://oercommons.org/", "https://teachonline.ca/", "https://www.educause.edu/"],
+            "q1_3": ["https://www.open.edu/openlearn/", "https://oercommons.org/", "https://teachonline.ca/"],
+            "q1_4": ["https://unesdoc.unesco.org/", "https://docs.moodle.org", "https://www.educause.edu/"],
+            "q1_5": ["https://oercommons.org/", "https://teachonline.ca/", "https://unesdoc.unesco.org/"],
+            
+            "q2_1": ["https://www.open.edu/openlearn/", "https://oercommons.org/", "https://teachonline.ca/"],
+            "q2_2": ["https://docs.moodle.org", "https://unesdoc.unesco.org/", "https://www.educause.edu/"],
+            "q2_3": ["https://oercommons.org/", "https://teachonline.ca/", "https://unesdoc.unesco.org/"],
+            "q2_4": ["https://docs.moodle.org", "https://www.open.edu/openlearn/", "https://www.educause.edu/"],
+            "q2_5": ["https://oercommons.org/", "https://teachonline.ca/", "https://unesdoc.unesco.org/"],
+            
+            "q3_1": ["https://docs.moodle.org", "https://oercommons.org/", "https://teachonline.ca/"],
+            "q3_2": ["https://unesdoc.unesco.org/", "https://www.open.edu/openlearn/", "https://www.educause.edu/"],
+            "q3_3": ["https://oercommons.org/", "https://teachonline.ca/", "https://unesdoc.unesco.org/"],
+            "q3_4": ["https://docs.moodle.org", "https://oercommons.org/", "https://teachonline.ca/"],
+            "q3_5": ["https://unesdoc.unesco.org/", "https://www.open.edu/openlearn/", "https://www.educause.edu/"],
+            
+            "q4_1": ["https://docs.moodle.org", "https://oercommons.org/", "https://teachonline.ca/"],
+            "q4_2": ["https://unesdoc.unesco.org/", "https://www.open.edu/openlearn/", "https://www.educause.edu/"],
+            "q4_3": ["https://oercommons.org/", "https://teachonline.ca/", "https://unesdoc.unesco.org/"],
+            "q4_4": ["https://docs.moodle.org", "https://oercommons.org/", "https://teachonline.ca/"],
+            "q4_5": ["https://unesdoc.unesco.org/", "https://www.open.edu/openlearn/", "https://www.educause.edu/"],
+            
+            "q5_1": ["https://oercommons.org/", "https://teachonline.ca/", "https://unesdoc.unesco.org/"],
+            "q5_2": ["https://docs.moodle.org", "https://oercommons.org/", "https://teachonline.ca/"],
+            "q5_3": ["https://unesdoc.unesco.org/", "https://www.open.edu/openlearn/", "https://www.educause.edu/"],
+            "q5_4": ["https://oercommons.org/", "https://teachonline.ca/", "https://unesdoc.unesco.org/"],
+            "q5_5": ["https://docs.moodle.org", "https://oercommons.org/", "https://teachonline.ca/"]
         };
 
         const ARCHETYPES = {
@@ -248,7 +270,7 @@
             }, [userData.answers]);
 
             const archetype = useMemo(() => {
-                if (stats.totalAnswered < 5) return null;
+                if (stats.totalAnswered < 10) return null;
                 const avgs = stats.catStats.map(s => s.avg);
                 const maxVal = Math.max(...avgs);
                 const minVal = Math.min(...avgs);
@@ -256,8 +278,8 @@
                 const maxIdx = avgs.indexOf(maxVal);
                 switch(maxIdx) {
                     case 0: return ARCHETYPES.architecte;
-                    case 3: return ARCHETYPES.facilitateur;
-                    case 2: return ARCHETYPES.explorateur;
+                    case 1: return ARCHETYPES.facilitateur;
+                    case 3: return ARCHETYPES.explorateur;
                     default: return ARCHETYPES.stratège;
                 }
             }, [stats]);
@@ -324,7 +346,6 @@
                     pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
                 };
 
-                // Utilisation de la bibliothèque html2pdf
                 window.html2pdf().set(opt).from(element).save();
             }, [userData.name]);
 
@@ -357,7 +378,7 @@
             };
 
             const chartData = stats.catStats.map(s => ({
-                name: s.name.split(' ')[0],
+                name: s.name.substring(0, 10) + "...",
                 fullName: s.name,
                 score: s.avg,
                 color: getLevelColor(s.avg)
@@ -383,9 +404,9 @@
                                 <Cpu size={32} />
                             </div>
                             <div className="space-y-1">
-                                <h1 className="text-2xl font-black tracking-tight leading-none text-indigo-600 dark:text-indigo-400">Débuter en FAD...de l'aide à ma mesure.</h1>
+                                <h1 className="text-2xl font-black tracking-tight leading-none text-indigo-600 dark:text-indigo-400">Positionnement Habiletés FAD</h1>
                                 <div className="flex items-center gap-2">
-                                    <span className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Profil utilisateur :</span>
+                                    <span className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Utilisateur :</span>
                                     <input 
                                         type="text" 
                                         value={userData.name}
@@ -414,7 +435,7 @@
                                         >
                                             {cat.icon}
                                         </button>
-                                        <span className="tooltip-text">{cat.cat.split(' ')[0]}</span>
+                                        <span className="tooltip-text">{cat.cat}</span>
                                     </div>
                                 ))}
                             </div>
@@ -482,7 +503,7 @@
                                 <div key={cat.id} id={`section-${cat.id}`} className="space-y-8 pt-4">
                                     <div className="flex items-center justify-between sticky top-0 py-3 z-10 bg-inherit/90 backdrop-blur-sm border-b-2 border-indigo-100 dark:border-indigo-900/30">
                                         <div className="flex items-center gap-4">
-                                            <div className={`p-2.5 rounded-lg shadow-sm ${cat.id === 0 ? 'bg-amber-100 text-amber-600' : cat.id === 1 ? 'bg-sky-100 text-sky-600' : cat.id === 2 ? 'bg-emerald-100 text-emerald-600' : 'bg-purple-100 text-purple-600'}`}>
+                                            <div className={`p-2.5 rounded-lg shadow-sm ${cat.id === 0 ? 'bg-amber-100 text-amber-600' : cat.id === 1 ? 'bg-sky-100 text-sky-600' : cat.id === 2 ? 'bg-emerald-100 text-emerald-600' : cat.id === 3 ? 'bg-purple-100 text-purple-600' : 'bg-rose-100 text-rose-600'}`}>
                                                 {cat.icon}
                                             </div>
                                             <h3 className="text-xl font-black uppercase tracking-tight">{cat.id + 1}. {cat.cat}</h3>
@@ -511,7 +532,6 @@
                                             placeholder="Notes & réflexions sur ce domaine..." 
                                             className={`w-full p-5 rounded-2xl text-xs h-24 resize-none border-2 focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all ${userData.isDarkMode ? 'bg-slate-900 border-slate-800 text-slate-300' : 'bg-white border-slate-100 text-slate-600'}`} 
                                         />
-                                        <div className="absolute right-4 bottom-4 opacity-20"><RotateCcw size={14} /></div>
                                     </div>
                                 </div>
                             ))}
@@ -519,12 +539,12 @@
 
                         <section className={`lg:w-1/2 overflow-y-auto px-10 py-10 ${userData.isDarkMode ? 'bg-slate-950' : 'bg-slate-100/30'}`}>
                             <div id="report-content" className="space-y-10 pdf-container">
-                                {/* PDF HEADER - Only visible in PDF/Print */}
+                                {/* PDF HEADER */}
                                 <div className="print-only mb-10 border-b-4 border-indigo-600 pb-6">
                                     <div className="flex justify-between items-end">
                                         <div>
-                                            <h1 className="text-3xl font-black text-indigo-600 uppercase tracking-tight">Rapport de Positionnement</h1>
-                                            <p className="text-slate-500 font-bold text-lg mt-1">Débuter en FAD...de l'aide à ma mesure.</p>
+                                            <h1 className="text-3xl font-black text-indigo-600 uppercase tracking-tight">Rapport de Positionnement FAD</h1>
+                                            <p className="text-slate-500 font-bold text-lg mt-1">Évaluation des habiletés technopédagogiques</p>
                                         </div>
                                         <div className="text-right">
                                             <div className="text-sm font-black text-slate-800 bg-slate-100 px-4 py-2 rounded-lg inline-block border border-slate-200">
@@ -545,35 +565,76 @@
                                                 <p className="text-xs font-black uppercase tracking-wider opacity-60">{getLevelLabel(stats.globalAvg)}</p>
                                             </div>
                                         </div>
-                                        <div className="w-full h-56">
+                                        <div className="w-full h-64">
                                             <ResponsiveContainer width="100%" height="100%">
-                                                <BarChart data={chartData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
+                                                <BarChart data={chartData} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
                                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={userData.isDarkMode ? '#1e293b' : '#e2e8f0'} />
-                                                    <XAxis dataKey="name" fontSize={11} fontWeight={700} axisLine={false} tickLine={false} />
+                                                    <XAxis dataKey="name" fontSize={9} fontWeight={700} axisLine={false} tickLine={false} />
                                                     <YAxis domain={[0, 3]} fontSize={10} fontWeight={600} axisLine={false} tickLine={false} ticks={[0, 1, 2, 3]} />
                                                     <ReChartsTooltip 
                                                         cursor={{ fill: userData.isDarkMode ? '#ffffff05' : '#00000005' }}
                                                         contentStyle={{ backgroundColor: userData.isDarkMode ? '#0f172a' : '#fff', border: 'none', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} 
                                                     />
-                                                    <Bar dataKey="score" radius={[8, 8, 0, 0]} barSize={45}>
+                                                    <Bar dataKey="score" radius={[8, 8, 0, 0]} barSize={50}>
                                                         {chartData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
                                                     </Bar>
                                                 </BarChart>
                                             </ResponsiveContainer>
                                         </div>
-                                        {archetype && (
-                                            <div className={`p-8 rounded-2xl border-2 w-full text-left ${userData.isDarkMode ? 'bg-indigo-950/20 border-indigo-900/30' : 'bg-indigo-50 border-indigo-100'}`}>
-                                                <div className="flex items-center gap-3 mb-4">
-                                                    <div className="bg-indigo-600 text-white p-1.5 rounded-lg shadow-md"><Users size={20} /></div>
-                                                    <div className="text-xs font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400">Profil : {archetype.t}</div>
-                                                </div>
-                                                <p className="text-sm leading-relaxed font-medium text-slate-600 dark:text-slate-300 italic">"{archetype.d}"</p>
-                                            </div>
-                                        )}
                                     </div>
                                 </div>
 
-                                {/* Section Notes et Réflexions pour le PDF */}
+                                {/* Section Ressources Personnalisées - BASÉES SUR CHAQUE RÉPONSE */}
+                                <div className="space-y-8 pb-24">
+                                    <div className="flex items-center gap-3 page-break-avoid">
+                                            <div className="h-6 w-1.5 bg-emerald-500 rounded-full" />
+                                            <h3 className="text-2xl font-black tracking-tight">Plan de Développement & Ressources</h3>
+                                    </div>
+                                    
+                                    {stats.totalAnswered > 0 ? (
+                                        <div className="space-y-10">
+                                            {QUESTIONS.map((cat) => {
+                                                const answeredInCat = cat.q.filter(q => userData.answers[q.id]);
+                                                if (answeredInCat.length === 0) return null;
+
+                                                return (
+                                                    <div key={cat.id} className={`overflow-hidden rounded-3xl border-2 page-break-avoid ${userData.isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100 shadow-lg shadow-slate-200/40'}`}>
+                                                        <div className="p-5 flex items-center justify-between" style={{ backgroundColor: `${getLevelColor(stats.catStats[cat.id].avg)}10`, borderLeft: `8px solid ${getLevelColor(stats.catStats[cat.id].avg)}` }}>
+                                                            <div className="flex items-center gap-3">
+                                                                <span className="text-sm font-black uppercase tracking-tight text-slate-800 dark:text-slate-100">{cat.cat}</span>
+                                                            </div>
+                                                            <span className="text-[10px] font-black px-4 py-1.5 rounded-full text-white shadow-md" style={{ backgroundColor: getLevelColor(stats.catStats[cat.id].avg) }}>{getLevelLabel(stats.catStats[cat.id].avg)}</span>
+                                                        </div>
+                                                        <div className="p-6 space-y-4">
+                                                            {answeredInCat.map((q) => {
+                                                                const score = userData.answers[q.id];
+                                                                const resourceUrl = RESOURCES_MAP[q.id][score - 1];
+                                                                return (
+                                                                    <div key={q.id} className={`p-4 rounded-2xl border-2 flex justify-between items-center gap-5 transition-all hover:border-indigo-500/50 ${userData.isDarkMode ? 'bg-slate-800/40 border-slate-700/50' : 'bg-slate-50 border-slate-100'}`}>
+                                                                        <div className="flex-1 space-y-1">
+                                                                            <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100">{q.t}</h4>
+                                                                            <div className="flex items-center gap-2">
+                                                                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${score === 1 ? 'bg-rose-100 text-rose-600' : score === 2 ? 'bg-amber-100 text-amber-600' : 'bg-emerald-100 text-emerald-600'}`}>Niveau {score}</span>
+                                                                                <p className="text-[10px] opacity-70 leading-relaxed font-medium truncate max-w-[200px]">{resourceUrl}</p>
+                                                                            </div>
+                                                                        </div>
+                                                                        <a href={resourceUrl} target="_blank" rel="noopener noreferrer" className="p-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-lg shadow-indigo-200 dark:shadow-indigo-900/30 transition-all active:scale-95 no-print"><ExternalLink size={16} /></a>
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    ) : (
+                                        <div className="text-center p-16 rounded-3xl border-4 border-dashed border-slate-200 dark:border-slate-800 text-slate-400 font-bold italic">
+                                            Complétez votre auto-évaluation pour découvrir vos recommandations personnalisées basées sur vos choix.
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Section Notes pour le PDF */}
                                 {Object.values(userData.notes).some(note => note && note.trim() !== '') && (
                                     <div className="space-y-8 pt-12 border-t-2 border-slate-200 dark:border-slate-800 page-break-avoid">
                                         <div className="flex items-center gap-3">
@@ -593,54 +654,12 @@
                                         </div>
                                     </div>
                                 )}
-
-                                <div className="space-y-8 pb-24">
-                                    <div className="flex items-center gap-3 page-break-avoid">
-                                            <div className="h-6 w-1.5 bg-emerald-500 rounded-full" />
-                                            <h3 className="text-2xl font-black tracking-tight">Ressources Personnalisées</h3>
-                                    </div>
-                                    {stats.totalAnswered > 0 ? (
-                                        <div className="space-y-8">
-                                            {QUESTIONS.map((cat, idx) => {
-                                                const score = stats.catStats[idx].avg;
-                                                if (score === 0) return null;
-                                                const level = score <= 1.6 ? "debut" : (score <= 2.4 ? "inter" : "expert");
-                                                const color = getLevelColor(score);
-                                                return (
-                                                    <div key={cat.id} className={`overflow-hidden rounded-3xl border-2 page-break-avoid ${userData.isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100 shadow-lg shadow-slate-200/40'}`}>
-                                                        <div className="p-5 flex items-center justify-between" style={{ backgroundColor: `${color}10`, borderLeft: `8px solid ${color}` }}>
-                                                            <div className="flex items-center gap-3">
-                                                                <span className="text-sm font-black uppercase tracking-tight" style={{ color: color }}>{cat.cat}</span>
-                                                            </div>
-                                                            <span className="text-[10px] font-black px-4 py-1.5 rounded-full text-white shadow-md" style={{ backgroundColor: color }}>{getLevelLabel(score)}</span>
-                                                        </div>
-                                                        <div className="p-6 space-y-4">
-                                                            {RESOURCES[idx][level].map((res, i) => (
-                                                                <div key={i} className={`p-4 rounded-2xl border-2 flex justify-between items-center gap-5 transition-all hover:scale-[1.01] ${userData.isDarkMode ? 'bg-slate-800/40 border-slate-700/50 hover:border-indigo-500/50' : 'bg-slate-50 border-slate-100 hover:border-indigo-200'}`}>
-                                                                    <div className="flex-1 space-y-1">
-                                                                        <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100">{res.t}</h4>
-                                                                        <p className="text-[11px] opacity-70 leading-relaxed font-medium">{res.d}</p>
-                                                                    </div>
-                                                                    <a href={res.l} target="_blank" rel="noopener noreferrer" className="p-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-lg shadow-indigo-200 dark:shadow-indigo-900/30 transition-all active:scale-95 no-print"><ExternalLink size={16} /></a>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    ) : (
-                                        <div className="text-center p-16 rounded-3xl border-4 border-dashed border-slate-200 dark:border-slate-800 text-slate-400 font-bold italic">
-                                            Complétez votre auto-évaluation pour découvrir vos recommandations personnalisées.
-                                        </div>
-                                    )}
-                                </div>
                             </div>
                         </section>
                     </main>
 
                     <footer className={`py-4 text-center text-[11px] font-bold border-t no-print tracking-wide ${userData.isDarkMode ? 'bg-slate-900 border-slate-800 text-slate-500' : 'bg-white border-slate-200 text-slate-400'}`}>
-                        Bilan FAD Autoportant © 2024 — État : <span className="text-indigo-500">{lastSaved ? `Sauvegardé à ${lastSaved}` : 'Prêt'}</span>
+                        Bilan Habiletés FAD — Basé sur le document de référence — État : <span className="text-indigo-500">{lastSaved ? `Sauvegardé à ${lastSaved}` : 'Prêt'}</span>
                     </footer>
                 </div>
             );
