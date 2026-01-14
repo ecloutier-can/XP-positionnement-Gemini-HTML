@@ -35,7 +35,13 @@
         }
         @media print {
             .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body { background-color: white !important; }
+            .glass-panel { background: white !important; border: 1px solid #e2e8f0 !important; }
+            .pdf-container { width: 100% !important; padding: 0 !important; }
+            .page-break-avoid { page-break-inside: avoid; }
         }
+        .print-only { display: none; }
         .scroll-smooth-container {
             scroll-behavior: smooth;
         }
@@ -303,13 +309,22 @@
             const exportPDF = useCallback(() => {
                 const element = document.getElementById('report-content');
                 if (!element) return;
+                
                 const opt = {
-                    margin: 0.5,
-                    filename: `PlanFAD_${userData.name || 'Bilan'}.pdf`,
+                    margin: [0.5, 0.5],
+                    filename: `Rapport_Positionnement_FAD_${userData.name || 'Anonyme'}.pdf`,
                     image: { type: 'jpeg', quality: 0.98 },
-                    html2canvas: { scale: 2 },
-                    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+                    html2canvas: { 
+                        scale: 2, 
+                        useCORS: true,
+                        letterRendering: true,
+                        scrollY: -window.scrollY 
+                    },
+                    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+                    pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
                 };
+
+                // Utilisation de la bibliothèque html2pdf
                 window.html2pdf().set(opt).from(element).save();
             }, [userData.name]);
 
@@ -503,8 +518,24 @@
                         </section>
 
                         <section className={`lg:w-1/2 overflow-y-auto px-10 py-10 ${userData.isDarkMode ? 'bg-slate-950' : 'bg-slate-100/30'}`}>
-                            <div id="report-content" className="space-y-10">
-                                <div className={`p-10 rounded-3xl shadow-2xl transition-all glass-panel border ${userData.isDarkMode ? 'border-slate-800 shadow-indigo-900/10' : 'border-white shadow-slate-200'}`}>
+                            <div id="report-content" className="space-y-10 pdf-container">
+                                {/* PDF HEADER - Only visible in PDF/Print */}
+                                <div className="print-only mb-10 border-b-4 border-indigo-600 pb-6">
+                                    <div className="flex justify-between items-end">
+                                        <div>
+                                            <h1 className="text-3xl font-black text-indigo-600 uppercase tracking-tight">Rapport de Positionnement</h1>
+                                            <p className="text-slate-500 font-bold text-lg mt-1">Débuter en FAD...de l'aide à ma mesure.</p>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="text-sm font-black text-slate-800 bg-slate-100 px-4 py-2 rounded-lg inline-block border border-slate-200">
+                                                Utilisateur : <span className="text-indigo-600">{userData.name || 'Anonyme'}</span>
+                                            </div>
+                                            <p className="text-[10px] text-slate-400 mt-2 font-bold uppercase tracking-widest">Généré le {new Date().toLocaleDateString()}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className={`p-10 rounded-3xl shadow-2xl transition-all glass-panel border page-break-avoid ${userData.isDarkMode ? 'border-slate-800 shadow-indigo-900/10' : 'border-white shadow-slate-200'}`}>
                                     <div className="flex flex-col items-center text-center space-y-8">
                                         <div className="space-y-2">
                                             <span className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em]">Maîtrise Globale</span>
@@ -544,14 +575,14 @@
 
                                 {/* Section Notes et Réflexions pour le PDF */}
                                 {Object.values(userData.notes).some(note => note && note.trim() !== '') && (
-                                    <div className="space-y-8 pt-12 border-t-2 border-slate-200 dark:border-slate-800">
+                                    <div className="space-y-8 pt-12 border-t-2 border-slate-200 dark:border-slate-800 page-break-avoid">
                                         <div className="flex items-center gap-3">
                                             <div className="h-6 w-1.5 bg-indigo-500 rounded-full" />
                                             <h3 className="text-2xl font-black tracking-tight">Notes & Réflexions</h3>
                                         </div>
                                         <div className="grid grid-cols-1 gap-5">
                                             {QUESTIONS.map((cat) => userData.notes[cat.id] && userData.notes[cat.id].trim() !== '' && (
-                                                <div key={cat.id} className={`p-7 rounded-2xl border-2 ${userData.isDarkMode ? 'bg-slate-900 border-slate-800 shadow-lg' : 'bg-white border-slate-50 shadow-xl shadow-slate-200/50'}`}>
+                                                <div key={cat.id} className={`p-7 rounded-2xl border-2 page-break-avoid ${userData.isDarkMode ? 'bg-slate-900 border-slate-800 shadow-lg' : 'bg-white border-slate-50 shadow-xl shadow-slate-200/50'}`}>
                                                     <div className="flex items-center gap-2 mb-4">
                                                         <div className="text-indigo-500">{cat.icon}</div>
                                                         <h4 className="text-[11px] font-black uppercase text-indigo-500 tracking-[0.15em]">{cat.cat}</h4>
@@ -564,7 +595,7 @@
                                 )}
 
                                 <div className="space-y-8 pb-24">
-                                    <div className="flex items-center gap-3">
+                                    <div className="flex items-center gap-3 page-break-avoid">
                                             <div className="h-6 w-1.5 bg-emerald-500 rounded-full" />
                                             <h3 className="text-2xl font-black tracking-tight">Ressources Personnalisées</h3>
                                     </div>
@@ -576,7 +607,7 @@
                                                 const level = score <= 1.6 ? "debut" : (score <= 2.4 ? "inter" : "expert");
                                                 const color = getLevelColor(score);
                                                 return (
-                                                    <div key={cat.id} className={`overflow-hidden rounded-3xl border-2 ${userData.isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100 shadow-lg shadow-slate-200/40'}`}>
+                                                    <div key={cat.id} className={`overflow-hidden rounded-3xl border-2 page-break-avoid ${userData.isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100 shadow-lg shadow-slate-200/40'}`}>
                                                         <div className="p-5 flex items-center justify-between" style={{ backgroundColor: `${color}10`, borderLeft: `8px solid ${color}` }}>
                                                             <div className="flex items-center gap-3">
                                                                 <span className="text-sm font-black uppercase tracking-tight" style={{ color: color }}>{cat.cat}</span>
@@ -590,7 +621,7 @@
                                                                         <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100">{res.t}</h4>
                                                                         <p className="text-[11px] opacity-70 leading-relaxed font-medium">{res.d}</p>
                                                                     </div>
-                                                                    <a href={res.l} target="_blank" rel="noopener noreferrer" className="p-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-lg shadow-indigo-200 dark:shadow-indigo-900/30 transition-all active:scale-95"><ExternalLink size={16} /></a>
+                                                                    <a href={res.l} target="_blank" rel="noopener noreferrer" className="p-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-lg shadow-indigo-200 dark:shadow-indigo-900/30 transition-all active:scale-95 no-print"><ExternalLink size={16} /></a>
                                                                 </div>
                                                             ))}
                                                         </div>
