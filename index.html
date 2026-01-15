@@ -76,6 +76,15 @@
             opacity: 1;
             bottom: -40px;
         }
+
+        /* Animations de transition pour le stepper */
+        .slide-enter {
+            animation: slideIn 0.4s ease-out forwards;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 transition-colors duration-300">
@@ -85,11 +94,11 @@
         import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
         import ReactDOM from 'react-dom/client';
         import { 
-            BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as ReChartsTooltip, ResponsiveContainer, Cell 
+            Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip as ReChartsTooltip
         } from 'recharts';
         import { 
             RotateCcw, Save, FileText, Printer, Moon, Sun, ChevronRight, ChevronLeft, ExternalLink,
-            BookOpen, Users, Layout, Cpu, Cloud, ListChecks, Upload, Globe, ShieldCheck, CheckCircle
+            BookOpen, Users, Layout, Cpu, Cloud, ListChecks, Upload, Globe, ShieldCheck, CheckCircle, Award, Target, TrendingUp
         } from 'lucide-react';
 
         // --- CONFIGURATION DU BRANDING ---
@@ -198,7 +207,7 @@
         const App = () => {
             const [userData, setUserData] = useState(() => {
                 try {
-                  const saved = localStorage.getItem('fad_positioning_v2');
+                  const saved = localStorage.getItem('fad_positioning_v3');
                   return saved ? JSON.parse(saved) : {
                       name: '',
                       answers: {},
@@ -217,7 +226,7 @@
             const fileInputRef = useRef(null);
 
             useEffect(() => {
-                localStorage.setItem('fad_positioning_v2', JSON.stringify(userData));
+                localStorage.setItem('fad_positioning_v3', JSON.stringify(userData));
                 setLastSaved(new Date().toLocaleTimeString());
                 setShowSaveIcon(true);
                 const timer = setTimeout(() => setShowSaveIcon(false), 2000);
@@ -267,8 +276,28 @@
                 const globalAvg = totalAnswered > 0 ? globalSum / totalAnswered : 0;
                 const globalProgress = (totalAnswered / totalQuestions) * 100;
 
-                return { catStats, globalAvg, totalAnswered, globalProgress };
+                // Calcul Forces/Faiblesses
+                const answeredCats = catStats.filter(c => c.count > 0);
+                const strength = answeredCats.length > 0 ? [...answeredCats].sort((a,b) => b.avg - a.avg)[0] : null;
+                const weakness = answeredCats.length > 0 ? [...answeredCats].sort((a,b) => a.avg - b.avg)[0] : null;
+
+                return { catStats, globalAvg, totalAnswered, globalProgress, strength, weakness };
             }, [userData.answers]);
+
+            const archetype = useMemo(() => {
+                if (stats.totalAnswered < 5) return null;
+                const avgs = stats.catStats.map(s => s.avg);
+                const maxVal = Math.max(...avgs);
+                const minVal = Math.min(...avgs);
+                if (stats.globalAvg > 2.3 && (maxVal - minVal < 0.7)) return ARCHETYPES.stratège;
+                const maxIdx = avgs.indexOf(maxVal);
+                switch(maxIdx) {
+                    case 0: return ARCHETYPES.architecte;
+                    case 1: return ARCHETYPES.facilitateur;
+                    case 3: return ARCHETYPES.explorateur;
+                    default: return ARCHETYPES.stratège;
+                }
+            }, [stats]);
 
             const resetForm = () => {
                 if (window.confirm("Voulez-vous vraiment réinitialiser toutes vos réponses ?")) {
@@ -287,9 +316,7 @@
             };
 
             const handleImportClick = () => {
-                if (fileInputRef.current) {
-                    fileInputRef.current.click();
-                }
+                if (fileInputRef.current) fileInputRef.current.click();
             };
 
             const onFileChange = (e) => {
@@ -308,19 +335,19 @@
                             });
                         }
                     } catch (err) {
-                        alert("Erreur lors de la lecture du fichier. Assurez-vous qu'il s'agit d'un fichier JSON valide généré par cette application.");
+                        alert("Erreur lors de la lecture du fichier.");
                     }
                 };
                 reader.readAsText(file);
-                e.target.value = null; // Reset input
+                e.target.value = null;
             };
 
             const exportPDF = useCallback(() => {
                 const element = document.getElementById('report-content');
                 if (!element) return;
                 const opt = {
-                    margin: [0.5, 0.5],
-                    filename: `Rapport_Positionnement_FAD_${userData.name || 'Anonyme'}.pdf`,
+                    margin: [0.3, 0.3],
+                    filename: `Rapport_FAD_${userData.name || 'Anonyme'}.pdf`,
                     image: { type: 'jpeg', quality: 0.98 },
                     html2canvas: { scale: 2, useCORS: true, letterRendering: true, scrollY: -window.scrollY },
                     jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
@@ -331,17 +358,7 @@
 
             const scrollToSection = (id) => {
                 setActiveCatIndex(id);
-                if (scrollContainerRef.current) {
-                    scrollContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
-                }
-            };
-
-            const scrollToTop = () => {
-                setActiveCatIndex(0);
-                if (scrollContainerRef.current) {
-                    scrollContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
-                }
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                if (scrollContainerRef.current) scrollContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
             };
 
             const getLevelColor = (avg) => {
@@ -358,11 +375,11 @@
                 return "AVANCÉ";
             };
 
-            const chartData = stats.catStats.map(s => ({
-                name: s.name.substring(0, 10) + "...",
+            const radarData = stats.catStats.map(s => ({
+                subject: s.name.substring(0, 15) + "...",
                 fullName: s.name,
-                score: s.avg,
-                color: getLevelColor(s.avg)
+                A: s.avg,
+                fullMark: 3
             }));
 
             const HeaderButton = ({ onClick, icon, label, colorClass }) => (
@@ -378,50 +395,29 @@
                 <div className={`min-h-screen flex flex-col ${userData.isDarkMode ? 'dark bg-slate-950 text-slate-100' : 'bg-slate-100/50 text-slate-900'}`}>
                     <header className={`sticky top-0 z-50 px-8 py-5 flex flex-col md:flex-row items-center justify-between gap-8 shadow-lg no-print transition-all duration-300 ${userData.isDarkMode ? 'bg-slate-900 border-b border-slate-800' : 'bg-white border-b border-slate-200'}`}>
                         <div className="flex items-center gap-6">
-                            {/* LOGO REDIMENSIONNÉ POUR MEILLEURE LECTURE */}
-                            <div className="bg-white p-3 rounded-2xl shadow-lg border border-slate-100 overflow-hidden flex items-center justify-center h-24 w-48 transition-all hover:scale-[1.02]">
-                                <img 
-                                    src={BRANDING_LOGO_URL} 
-                                    alt="Logo Application" 
-                                    className="max-h-full max-w-full object-contain"
-                                    onError={(e) => {
-                                        e.target.style.display = 'none';
-                                        e.target.nextSibling.style.display = 'block';
-                                    }}
-                                />
-                                <Cpu size={40} className="text-indigo-600 hidden" />
+                            <div className="bg-white p-3 rounded-2xl shadow-lg border border-slate-100 overflow-hidden flex items-center justify-center h-24 w-48 transition-all">
+                                <img src={BRANDING_LOGO_URL} alt="Logo" className="max-h-full max-w-full object-contain" />
                             </div>
-                            
                             <div className="space-y-1">
                                 <h1 className="text-2xl font-black tracking-tight leading-none text-indigo-600 dark:text-indigo-400">Débuter en FAD...de l'aide à ma mesure.</h1>
                                 <div className="flex items-center gap-2">
                                     <span className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Utilisateur :</span>
-                                    <input 
-                                        type="text" 
-                                        value={userData.name}
-                                        onChange={(e) => setUserData(prev => ({ ...prev, name: e.target.value }))}
-                                        placeholder="Votre nom" 
-                                        className={`text-sm font-semibold bg-transparent border-b-2 border-slate-200 focus:border-indigo-500 focus:outline-none px-1 transition-all ${userData.isDarkMode ? 'text-white' : 'text-slate-800'}`}
-                                    />
+                                    <input type="text" value={userData.name} onChange={(e) => setUserData(prev => ({ ...prev, name: e.target.value }))} placeholder="Votre nom" className={`text-sm font-semibold bg-transparent border-b-2 border-slate-200 focus:border-indigo-500 focus:outline-none px-1 transition-all ${userData.isDarkMode ? 'text-white' : 'text-slate-800'}`} />
                                 </div>
                             </div>
                         </div>
 
                         <nav className="flex items-center bg-slate-100 dark:bg-slate-800 p-2 rounded-2xl shadow-inner ring-1 ring-slate-200 dark:ring-slate-700">
-                            <div className="tooltip-container mr-3 px-3 border-r-2 border-slate-200 dark:border-slate-700">
-                                <button onClick={scrollToTop} className="flex items-center justify-center p-1.5 text-slate-400 hover:text-indigo-500 transition-colors">
-                                    <ListChecks size={20} />
-                                </button>
-                                <span className="tooltip-text">Haut</span>
-                            </div>
                             <div className="flex gap-1.5">
                                 {QUESTIONS.map((cat, idx) => (
                                     <div key={cat.id} className="tooltip-container">
-                                        <button 
-                                            onClick={() => scrollToSection(cat.id)}
-                                            className={`flex items-center justify-center w-10 h-10 rounded-xl transition-all ${activeCatIndex === idx ? 'bg-indigo-600 text-white shadow-md scale-110' : stats.catStats[idx].progress === 100 ? 'text-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'text-slate-500 hover:bg-white dark:hover:bg-slate-700 hover:shadow-sm'}`}
-                                        >
+                                        <button onClick={() => scrollToSection(cat.id)} className={`relative flex items-center justify-center w-10 h-10 rounded-xl transition-all ${activeCatIndex === idx ? 'bg-indigo-600 text-white shadow-md scale-110' : 'text-slate-500 hover:bg-white dark:hover:bg-slate-700'}`}>
                                             {cat.icon}
+                                            {stats.catStats[idx].progress === 100 && (
+                                                <div className="absolute -top-1 -right-1 bg-emerald-500 text-white rounded-full p-0.5 border-2 border-white dark:border-slate-800">
+                                                    <CheckCircle size={10} />
+                                                </div>
+                                            )}
                                         </button>
                                         <span className="tooltip-text">{cat.cat}</span>
                                     </div>
@@ -430,22 +426,16 @@
                         </nav>
 
                         <div className="flex items-center gap-3 flex-wrap justify-center">
-                            <HeaderButton onClick={resetForm} icon={<RotateCcw size={22} />} label="Réinitialiser" colorClass="hover:bg-red-50 text-red-500" />
+                            <HeaderButton onClick={resetForm} icon={<RotateCcw size={22} />} label="Reset" colorClass="hover:bg-red-50 text-red-500" />
                             <div className="flex items-center gap-2 px-3 border-x border-slate-200 dark:border-slate-700">
                                 <HeaderButton onClick={handleImportClick} icon={<Upload size={22} />} label="Ouvrir" colorClass="hover:bg-blue-50 text-blue-500" />
                                 <input type="file" ref={fileInputRef} onChange={onFileChange} accept=".json" className="hidden" />
-                                <HeaderButton onClick={exportJSON} icon={<Save size={22} />} label="Enregistrer" colorClass="hover:bg-blue-50 text-blue-500" />
+                                <HeaderButton onClick={exportJSON} icon={<Save size={22} />} label="Save" colorClass="hover:bg-blue-50 text-blue-500" />
                             </div>
                             <HeaderButton onClick={exportPDF} icon={<FileText size={22} />} label="PDF" colorClass="hover:bg-emerald-50 text-emerald-500" />
-                            <HeaderButton onClick={() => window.print()} icon={<Printer size={22} />} label="Imprimer" colorClass="hover:bg-slate-100 text-slate-500" />
+                            <HeaderButton onClick={() => window.print()} icon={<Printer size={22} />} label="Print" colorClass="hover:bg-slate-100 text-slate-500" />
                             <div className="w-px h-8 bg-slate-200 dark:bg-slate-700 mx-1" />
                             <HeaderButton onClick={toggleDarkMode} icon={userData.isDarkMode ? <Sun size={22} /> : <Moon size={22} />} label="Thème" colorClass="hover:bg-indigo-50 text-indigo-500" />
-                            {showSaveIcon && (
-                                <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-500 animate-pulse ml-2 bg-indigo-50 dark:bg-indigo-900/20 px-3 py-1.5 rounded-full">
-                                    <Cloud size={14} />
-                                    <span>Sync</span>
-                                </div>
-                            )}
                         </div>
                     </header>
 
@@ -455,7 +445,7 @@
 
                     <main className="flex-1 flex flex-col lg:flex-row overflow-hidden">
                         <section ref={scrollContainerRef} className={`lg:w-1/2 overflow-y-auto px-10 py-10 no-print scroll-smooth-container ${userData.isDarkMode ? 'border-r border-slate-800' : 'border-r border-slate-200'}`}>
-                            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <div key={activeCatIndex} className="space-y-8 slide-enter">
                                 <div className="flex items-center justify-between py-3 border-b-2 border-indigo-100 dark:border-indigo-900/30">
                                     <div className="flex items-center gap-4">
                                         <div className={`p-2.5 rounded-lg shadow-sm ${activeCatIndex === 0 ? 'bg-amber-100 text-amber-600' : activeCatIndex === 1 ? 'bg-sky-100 text-sky-600' : activeCatIndex === 2 ? 'bg-emerald-100 text-emerald-600' : activeCatIndex === 3 ? 'bg-purple-100 text-purple-600' : 'bg-rose-100 text-rose-600'}`}>
@@ -488,12 +478,7 @@
                                 </div>
 
                                 <div className="relative">
-                                    <textarea 
-                                        value={userData.notes[activeCatIndex] || ''} 
-                                        onChange={(e) => handleNote(activeCatIndex, e.target.value)} 
-                                        placeholder="Notes & réflexions sur ce domaine..." 
-                                        className={`w-full p-5 rounded-2xl text-xs h-24 resize-none border-2 focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all ${userData.isDarkMode ? 'bg-slate-900 border-slate-800 text-slate-300' : 'bg-white border-slate-100 text-slate-600'}`} 
-                                    />
+                                    <textarea value={userData.notes[activeCatIndex] || ''} onChange={(e) => handleNote(activeCatIndex, e.target.value)} placeholder="Notes & réflexions sur ce domaine..." className={`w-full p-5 rounded-2xl text-xs h-24 resize-none border-2 focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all ${userData.isDarkMode ? 'bg-slate-900 border-slate-800 text-slate-300' : 'bg-white border-slate-100 text-slate-600'}`} />
                                 </div>
 
                                 <div className="flex justify-between items-center pt-8">
@@ -529,29 +514,75 @@
                                     </div>
                                 </div>
 
-                                <div className={`p-10 rounded-3xl shadow-2xl transition-all glass-panel border page-break-avoid ${userData.isDarkMode ? 'border-slate-800 shadow-indigo-900/10' : 'border-white shadow-slate-200'}`}>
-                                    <div className="flex flex-col items-center text-center space-y-8">
-                                        <div className="space-y-2">
-                                            <span className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em]">Maîtrise Globale</span>
-                                            <h2 className="text-6xl font-black" style={{ color: getLevelColor(stats.globalAvg) }}>{stats.globalAvg.toFixed(2)}</h2>
-                                            <div className="flex items-center justify-center gap-2">
-                                                <div className="h-2 w-2 rounded-full animate-pulse" style={{ backgroundColor: getLevelColor(stats.globalAvg) }} />
-                                                <p className="text-xs font-black uppercase tracking-wider opacity-60">{getLevelLabel(stats.globalAvg)}</p>
-                                            </div>
+                                <div className={`p-8 rounded-3xl shadow-2xl transition-all glass-panel border page-break-avoid ${userData.isDarkMode ? 'border-slate-800 shadow-indigo-900/10' : 'border-white shadow-slate-200'}`}>
+                                    <div className="flex flex-col items-center text-center space-y-6">
+                                        <div className="space-y-1">
+                                            <span className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em]">Votre Profil Radar</span>
+                                            <h2 className="text-5xl font-black" style={{ color: getLevelColor(stats.globalAvg) }}>{stats.globalAvg.toFixed(2)}</h2>
+                                            <p className="text-xs font-black uppercase tracking-widest opacity-60">{getLevelLabel(stats.globalAvg)}</p>
                                         </div>
-                                        <div className="w-full h-64">
+                                        
+                                        <div className="w-full h-[350px]">
                                             <ResponsiveContainer width="100%" height="100%">
-                                                <BarChart data={chartData} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
-                                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={userData.isDarkMode ? '#1e293b' : '#e2e8f0'} />
-                                                    <XAxis dataKey="name" fontSize={9} fontWeight={700} axisLine={false} tickLine={false} />
-                                                    <YAxis domain={[0, 3]} fontSize={10} fontWeight={600} axisLine={false} tickLine={false} ticks={[0, 1, 2, 3]} />
-                                                    <ReChartsTooltip cursor={{ fill: userData.isDarkMode ? '#ffffff05' : '#00000005' }} contentStyle={{ backgroundColor: userData.isDarkMode ? '#0f172a' : '#fff', border: 'none', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} />
-                                                    <Bar dataKey="score" radius={[8, 8, 0, 0]} barSize={50}>
-                                                        {chartData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
-                                                    </Bar>
-                                                </BarChart>
+                                                <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
+                                                    <PolarGrid stroke={userData.isDarkMode ? '#334155' : '#e2e8f0'} />
+                                                    <PolarAngleAxis dataKey="subject" tick={{ fontSize: 10, fontWeight: 700, fill: userData.isDarkMode ? '#94a3b8' : '#475569' }} />
+                                                    <PolarRadiusAxis angle={30} domain={[0, 3]} tick={false} axisLine={false} />
+                                                    <Radar
+                                                        name="Score"
+                                                        dataKey="A"
+                                                        stroke={getLevelColor(stats.globalAvg)}
+                                                        fill={getLevelColor(stats.globalAvg)}
+                                                        fillOpacity={0.6}
+                                                    />
+                                                    <ReChartsTooltip 
+                                                        content={({ active, payload }) => {
+                                                            if (active && payload && payload.length) {
+                                                                const data = payload[0].payload;
+                                                                return (
+                                                                    <div className="bg-white dark:bg-slate-900 p-3 rounded-xl shadow-xl border border-slate-100 dark:border-slate-800">
+                                                                        <p className="text-[10px] font-black text-slate-400 uppercase">{data.fullName}</p>
+                                                                        <p className="text-sm font-bold text-indigo-500">Score: {data.A.toFixed(2)} / 3</p>
+                                                                    </div>
+                                                                );
+                                                            }
+                                                            return null;
+                                                        }}
+                                                    />
+                                                </RadarChart>
                                             </ResponsiveContainer>
                                         </div>
+
+                                        {/* Synthèse Analytique Dynamique */}
+                                        {stats.totalAnswered > 0 && (
+                                            <div className="w-full p-6 rounded-2xl bg-indigo-50/50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-900/30 text-left space-y-4">
+                                                <div className="flex items-center gap-2">
+                                                    <Award className="text-indigo-500" size={20} />
+                                                    <h4 className="font-black text-sm uppercase tracking-tight text-indigo-700 dark:text-indigo-400">Votre profil en un coup d'œil</h4>
+                                                </div>
+                                                <div className="space-y-3">
+                                                    {stats.strength && (
+                                                        <div className="flex gap-3">
+                                                            <div className="mt-1 p-1 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600"><TrendingUp size={14} /></div>
+                                                            <p className="text-xs leading-relaxed"><span className="font-bold">Force majeure :</span> Votre maîtrise en <span className="text-emerald-600 font-bold">"{stats.strength.name}"</span> est un levier solide pour vos projets de FAD.</p>
+                                                        </div>
+                                                    )}
+                                                    {stats.weakness && stats.weakness.id !== stats.strength?.id && (
+                                                        <div className="flex gap-3">
+                                                            <div className="mt-1 p-1 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600"><Target size={14} /></div>
+                                                            <p className="text-xs leading-relaxed"><span className="font-bold">Axe prioritaire :</span> Le domaine <span className="text-amber-600 font-bold">"{stats.weakness.name}"</span> gagnerait à être renforcé pour équilibrer votre pédagogie.</p>
+                                                        </div>
+                                                    )}
+                                                    {archetype && (
+                                                        <div className="pt-2 border-t border-indigo-100 dark:border-indigo-900/20">
+                                                            <p className="text-[11px] font-medium text-slate-500 italic dark:text-slate-400">
+                                                                Synthèse : {archetype.d}
+                                                            </p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
@@ -597,26 +628,6 @@
                                         <div className="text-center p-16 rounded-3xl border-4 border-dashed border-slate-200 dark:border-slate-800 text-slate-400 font-bold italic">Complétez votre auto-évaluation pour découvrir vos recommandations.</div>
                                     )}
                                 </div>
-
-                                {Object.values(userData.notes).some(note => note && note.trim() !== '') && (
-                                    <div className="space-y-8 pt-12 border-t-2 border-slate-200 dark:border-slate-800 page-break-avoid">
-                                        <div className="flex items-center gap-3">
-                                            <div className="h-6 w-1.5 bg-indigo-500 rounded-full" />
-                                            <h3 className="text-2xl font-black tracking-tight">Notes & Réflexions</h3>
-                                        </div>
-                                        <div className="grid grid-cols-1 gap-5">
-                                            {QUESTIONS.map((cat) => userData.notes[cat.id] && userData.notes[cat.id].trim() !== '' && (
-                                                <div key={cat.id} className={`p-7 rounded-2xl border-2 page-break-avoid ${userData.isDarkMode ? 'bg-slate-900 border-slate-800 shadow-lg' : 'bg-white border-slate-50 shadow-xl shadow-slate-200/50'}`}>
-                                                    <div className="flex items-center gap-2 mb-4">
-                                                        <div className="text-indigo-500">{cat.icon}</div>
-                                                        <h4 className="text-[11px] font-black uppercase text-indigo-500 tracking-[0.15em]">{cat.cat}</h4>
-                                                    </div>
-                                                    <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300 italic whitespace-pre-wrap border-l-4 border-indigo-100 dark:border-indigo-900/50 pl-5">"{userData.notes[cat.id]}"</p>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
                             </div>
                         </section>
                     </main>
