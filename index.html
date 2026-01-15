@@ -88,7 +88,7 @@
             BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as ReChartsTooltip, ResponsiveContainer, Cell 
         } from 'recharts';
         import { 
-            RotateCcw, Save, FileText, Printer, Moon, Sun, ChevronRight, ExternalLink,
+            RotateCcw, Save, FileText, Printer, Moon, Sun, ChevronRight, ChevronLeft, ExternalLink,
             BookOpen, Users, Layout, Cpu, Cloud, ListChecks, Upload, Globe, ShieldCheck, CheckCircle
         } from 'lucide-react';
 
@@ -214,6 +214,7 @@
 
             const [lastSaved, setLastSaved] = useState(null);
             const [showSaveIcon, setShowSaveIcon] = useState(false);
+            const [activeCatIndex, setActiveCatIndex] = useState(0);
             const scrollContainerRef = useRef(null);
             const fileInputRef = useRef(null);
 
@@ -263,10 +264,12 @@
                 });
 
                 const totalAnswered = Object.keys(userData.answers).length;
+                const totalQuestions = QUESTIONS.reduce((acc, cat) => acc + cat.q.length, 0);
                 const globalSum = Object.values(userData.answers).reduce((a, b) => a + b, 0);
                 const globalAvg = totalAnswered > 0 ? globalSum / totalAnswered : 0;
+                const globalProgress = (totalAnswered / totalQuestions) * 100;
 
-                return { catStats, globalAvg, totalAnswered };
+                return { catStats, globalAvg, totalAnswered, globalProgress };
             }, [userData.answers]);
 
             const archetype = useMemo(() => {
@@ -287,6 +290,7 @@
             const resetForm = () => {
                 if (window.confirm("Voulez-vous vraiment réinitialiser toutes vos réponses ?")) {
                     setUserData({ name: '', answers: {}, notes: {}, isDarkMode: userData.isDarkMode });
+                    setActiveCatIndex(0);
                 }
             };
 
@@ -350,13 +354,14 @@
             }, [userData.name]);
 
             const scrollToSection = (id) => {
-                const element = document.getElementById(`section-${id}`);
-                if (element && scrollContainerRef.current) {
-                    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                setActiveCatIndex(id);
+                if (scrollContainerRef.current) {
+                    scrollContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
                 }
             };
 
             const scrollToTop = () => {
+                setActiveCatIndex(0);
                 if (scrollContainerRef.current) {
                     scrollContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
                 }
@@ -396,6 +401,8 @@
                 </div>
             );
 
+            const activeCat = QUESTIONS[activeCatIndex];
+
             return (
                 <div className={`min-h-screen flex flex-col ${userData.isDarkMode ? 'dark bg-slate-950 text-slate-100' : 'bg-slate-100/50 text-slate-900'}`}>
                     <header className={`sticky top-0 z-50 px-8 py-7 flex flex-col md:flex-row items-center justify-between gap-8 shadow-lg no-print transition-all duration-300 ${userData.isDarkMode ? 'bg-slate-900 border-b border-slate-800' : 'bg-white border-b border-slate-200'}`}>
@@ -431,7 +438,7 @@
                                     <div key={cat.id} className="tooltip-container">
                                         <button 
                                             onClick={() => scrollToSection(cat.id)}
-                                            className={`flex items-center justify-center w-10 h-10 rounded-xl transition-all ${stats.catStats[idx].progress === 100 ? 'text-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'text-slate-500 hover:bg-white dark:hover:bg-slate-700 hover:shadow-sm'}`}
+                                            className={`flex items-center justify-center w-10 h-10 rounded-xl transition-all ${activeCatIndex === idx ? 'bg-indigo-600 text-white shadow-md scale-110' : stats.catStats[idx].progress === 100 ? 'text-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'text-slate-500 hover:bg-white dark:hover:bg-slate-700 hover:shadow-sm'}`}
                                         >
                                             {cat.icon}
                                         </button>
@@ -497,44 +504,88 @@
                         </div>
                     </header>
 
+                    {/* BARRE DE PROGRESSION GLOBALE PERSISTANTE */}
+                    <div className="w-full h-2 bg-slate-200 dark:bg-slate-800 no-print sticky top-[108px] md:top-[88px] z-40">
+                        <div 
+                            className="h-full bg-indigo-600 transition-all duration-700 ease-out shadow-[0_0_10px_rgba(79,70,229,0.5)]" 
+                            style={{ width: `${stats.globalProgress}%` }}
+                        />
+                    </div>
+
                     <main className="flex-1 flex flex-col lg:flex-row overflow-hidden">
-                        <section ref={scrollContainerRef} className={`lg:w-1/2 overflow-y-auto px-10 py-10 space-y-14 border-r no-print scroll-smooth-container ${userData.isDarkMode ? 'border-slate-800' : 'border-slate-200'}`}>
-                            {QUESTIONS.map((cat) => (
-                                <div key={cat.id} id={`section-${cat.id}`} className="space-y-8 pt-4">
-                                    <div className="flex items-center justify-between sticky top-0 py-3 z-10 bg-inherit/90 backdrop-blur-sm border-b-2 border-indigo-100 dark:border-indigo-900/30">
-                                        <div className="flex items-center gap-4">
-                                            <div className={`p-2.5 rounded-lg shadow-sm ${cat.id === 0 ? 'bg-amber-100 text-amber-600' : cat.id === 1 ? 'bg-sky-100 text-sky-600' : cat.id === 2 ? 'bg-emerald-100 text-emerald-600' : cat.id === 3 ? 'bg-purple-100 text-purple-600' : 'bg-rose-100 text-rose-600'}`}>
-                                                {cat.icon}
-                                            </div>
-                                            <h3 className="text-xl font-black uppercase tracking-tight">{cat.id + 1}. {cat.cat}</h3>
+                        <section ref={scrollContainerRef} className={`lg:w-1/2 overflow-y-auto px-10 py-10 no-print scroll-smooth-container ${userData.isDarkMode ? 'border-r border-slate-800' : 'border-r border-slate-200'}`}>
+                            {/* MODE FOCUS / STEPPER */}
+                            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                <div className="flex items-center justify-between py-3 border-b-2 border-indigo-100 dark:border-indigo-900/30">
+                                    <div className="flex items-center gap-4">
+                                        <div className={`p-2.5 rounded-lg shadow-sm ${activeCatIndex === 0 ? 'bg-amber-100 text-amber-600' : activeCatIndex === 1 ? 'bg-sky-100 text-sky-600' : activeCatIndex === 2 ? 'bg-emerald-100 text-emerald-600' : activeCatIndex === 3 ? 'bg-purple-100 text-purple-600' : 'bg-rose-100 text-rose-600'}`}>
+                                            {activeCat.icon}
                                         </div>
-                                        <div className="text-sm font-black px-4 py-1.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-full ring-1 ring-indigo-200 dark:ring-indigo-800">{Math.round(stats.catStats[cat.id].progress)}%</div>
+                                        <div>
+                                            <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Catégorie {activeCatIndex + 1} / {QUESTIONS.length}</span>
+                                            <h3 className="text-xl font-black uppercase tracking-tight">{activeCat.cat}</h3>
+                                        </div>
                                     </div>
-                                    <div className="space-y-5">
-                                        {cat.q.map((q) => (
-                                            <div key={q.id} className={`p-6 rounded-2xl border-2 transition-all duration-300 ${userData.answers[q.id] ? (userData.isDarkMode ? 'bg-slate-900/50 border-indigo-900/50 shadow-inner' : 'bg-indigo-50/20 border-indigo-100 shadow-sm') : (userData.isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100 shadow-sm')}`}>
-                                                <p className="font-bold mb-5 text-sm leading-relaxed text-slate-700 dark:text-slate-200">{q.t}</p>
-                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                                    {[ { val: 1, label: q.a, char: 'A' }, { val: 2, label: q.b, char: 'B' }, { val: 3, label: q.c, char: 'C' } ].map((opt) => (
-                                                        <button key={opt.val} onClick={() => handleAnswer(q.id, opt.val)} className={`text-left p-4 rounded-xl text-xs font-medium transition-all transform hover:scale-[1.02] active:scale-[0.98] ${userData.answers[q.id] === opt.val ? 'bg-indigo-600 text-white shadow-lg ring-4 ring-indigo-100 dark:ring-indigo-900/30' : (userData.isDarkMode ? 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700' : 'bg-white border border-slate-100 hover:border-indigo-300 hover:bg-indigo-50 text-slate-600')}`}>
-                                                            <span className={`inline-block w-6 h-6 text-center leading-6 rounded-lg mr-3 font-black text-[10px] ${userData.answers[q.id] === opt.val ? 'bg-white text-indigo-600' : 'bg-slate-100 dark:bg-slate-700 text-slate-400'}`}>{opt.char}</span>
-                                                            {opt.label}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <div className="relative">
-                                        <textarea 
-                                            value={userData.notes[cat.id] || ''} 
-                                            onChange={(e) => handleNote(cat.id, e.target.value)} 
-                                            placeholder="Notes & réflexions sur ce domaine..." 
-                                            className={`w-full p-5 rounded-2xl text-xs h-24 resize-none border-2 focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all ${userData.isDarkMode ? 'bg-slate-900 border-slate-800 text-slate-300' : 'bg-white border-slate-100 text-slate-600'}`} 
-                                        />
+                                    <div className="text-sm font-black px-4 py-1.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-full ring-1 ring-indigo-200 dark:ring-indigo-800">
+                                        {Math.round(stats.catStats[activeCatIndex].progress)}%
                                     </div>
                                 </div>
-                            ))}
+
+                                <div className="space-y-6">
+                                    {activeCat.q.map((q) => (
+                                        <div key={q.id} className={`p-6 rounded-2xl border-2 transition-all duration-300 ${userData.answers[q.id] ? (userData.isDarkMode ? 'bg-slate-900/50 border-indigo-900/50 shadow-inner' : 'bg-indigo-50/20 border-indigo-100 shadow-sm') : (userData.isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100 shadow-sm')}`}>
+                                            <p className="font-bold mb-5 text-sm leading-relaxed text-slate-700 dark:text-slate-200">{q.t}</p>
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                                {[ { val: 1, label: q.a, char: 'A' }, { val: 2, label: q.b, char: 'B' }, { val: 3, label: q.c, char: 'C' } ].map((opt) => (
+                                                    <button key={opt.val} onClick={() => handleAnswer(q.id, opt.val)} className={`text-left p-4 rounded-xl text-xs font-medium transition-all transform hover:scale-[1.02] active:scale-[0.98] ${userData.answers[q.id] === opt.val ? 'bg-indigo-600 text-white shadow-lg ring-4 ring-indigo-100 dark:ring-indigo-900/30' : (userData.isDarkMode ? 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700' : 'bg-white border border-slate-100 hover:border-indigo-300 hover:bg-indigo-50 text-slate-600')}`}>
+                                                        <span className={`inline-block w-6 h-6 text-center leading-6 rounded-lg mr-3 font-black text-[10px] ${userData.answers[q.id] === opt.val ? 'bg-white text-indigo-600' : 'bg-slate-100 dark:bg-slate-700 text-slate-400'}`}>{opt.char}</span>
+                                                        {opt.label}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div className="relative">
+                                    <textarea 
+                                        value={userData.notes[activeCatIndex] || ''} 
+                                        onChange={(e) => handleNote(activeCatIndex, e.target.value)} 
+                                        placeholder="Notes & réflexions sur ce domaine..." 
+                                        className={`w-full p-5 rounded-2xl text-xs h-24 resize-none border-2 focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all ${userData.isDarkMode ? 'bg-slate-900 border-slate-800 text-slate-300' : 'bg-white border-slate-100 text-slate-600'}`} 
+                                    />
+                                </div>
+
+                                {/* NAVIGATION STEPPER */}
+                                <div className="flex justify-between items-center pt-8">
+                                    <button 
+                                        disabled={activeCatIndex === 0}
+                                        onClick={() => setActiveCatIndex(prev => Math.max(0, prev - 1))}
+                                        className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${activeCatIndex === 0 ? 'opacity-30 cursor-not-allowed bg-slate-200 dark:bg-slate-800' : 'bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 active:scale-95'}`}
+                                    >
+                                        <ChevronLeft size={20} />
+                                        Précédent
+                                    </button>
+                                    
+                                    <div className="flex gap-2">
+                                        {QUESTIONS.map((_, i) => (
+                                            <div 
+                                                key={i} 
+                                                className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${activeCatIndex === i ? 'bg-indigo-600 w-8' : 'bg-slate-300 dark:bg-slate-700'}`}
+                                            />
+                                        ))}
+                                    </div>
+
+                                    <button 
+                                        disabled={activeCatIndex === QUESTIONS.length - 1}
+                                        onClick={() => setActiveCatIndex(prev => Math.min(QUESTIONS.length - 1, prev + 1))}
+                                        className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${activeCatIndex === QUESTIONS.length - 1 ? 'opacity-30 cursor-not-allowed bg-slate-200 dark:bg-slate-800' : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-200 dark:shadow-none active:scale-95'}`}
+                                    >
+                                        {activeCatIndex === QUESTIONS.length - 1 ? 'Terminer' : 'Suivant'}
+                                        <ChevronRight size={20} />
+                                    </button>
+                                </div>
+                            </div>
                         </section>
 
                         <section className={`lg:w-1/2 overflow-y-auto px-10 py-10 ${userData.isDarkMode ? 'bg-slate-950' : 'bg-slate-100/30'}`}>
