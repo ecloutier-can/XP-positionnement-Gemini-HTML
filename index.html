@@ -201,7 +201,7 @@
             stratège: { t: "Le Stratège", d: "Profil équilibré. Vous jonglez avec brio entre technique, pédagogie et accompagnement." },
             architecte: { t: "L'Architecte", d: "Expert en planification. Votre force réside dans le design pédagogique et la structure." },
             facilitateur: { t: "Le Facilitateur", d: "L'humain est au cœur. Vous privilégiez un encadrement bienveillant et un soutien constant." },
-            explorateur: { t: "L'Explorateur Techno", d: "Maître des outils. Vous dynamisez vos cours par l'innovation et les ressources multimédias." }
+            explorateur: { t: "Le Facilitateur Techno", d: "Maître des outils. Vous dynamisez vos cours par l'innovation et les ressources multimédias." }
         };
 
         const App = () => {
@@ -508,7 +508,7 @@
                                                     <img src={BRANDING_LOGO_URL} alt="Logo" className="max-h-full max-w-full object-contain" />
                                                 </div>
                                                 <h1 className="text-2xl font-black text-indigo-700 uppercase tracking-tight leading-tight">
-                                                    Positionnement des Habiletés FAD
+                                                    Débuter en FAD…de l’aide à ma mesure
                                                 </h1>
                                             </div>
                                             <div className="pl-2 border-l-4 border-indigo-100">
@@ -641,6 +641,27 @@
                                         <div className="text-center p-16 rounded-3xl border-4 border-dashed border-slate-200 dark:border-slate-800 text-slate-400 font-bold italic">Complétez votre auto-évaluation pour découvrir vos recommandations.</div>
                                     )}
                                 </div>
+
+                                {/* Section Notes pour le PDF */}
+                                {Object.values(userData.notes).some(note => note && note.trim() !== '') && (
+                                    <div className="space-y-8 pt-12 border-t-2 border-slate-200 dark:border-slate-800 page-break-avoid">
+                                        <div className="flex items-center gap-3">
+                                            <div className="h-6 w-1.5 bg-indigo-500 rounded-full" />
+                                            <h3 className="text-2xl font-black tracking-tight">Notes & Réflexions</h3>
+                                        </div>
+                                        <div className="grid grid-cols-1 gap-5">
+                                            {QUESTIONS.map((cat) => userData.notes[cat.id] && userData.notes[cat.id].trim() !== '' && (
+                                                <div key={cat.id} className={`p-7 rounded-2xl border-2 page-break-avoid ${userData.isDarkMode ? 'bg-slate-900 border-slate-800 shadow-lg' : 'bg-white border-slate-50 shadow-xl shadow-slate-200/50'}`}>
+                                                    <div className="flex items-center gap-2 mb-4">
+                                                        <div className="text-indigo-500">{cat.icon}</div>
+                                                        <h4 className="text-[11px] font-black uppercase text-indigo-500 tracking-[0.15em]">{cat.cat}</h4>
+                                                    </div>
+                                                    <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300 italic whitespace-pre-wrap border-l-4 border-indigo-100 dark:border-indigo-900/50 pl-5">"{userData.notes[cat.id]}"</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </section>
                     </main>
