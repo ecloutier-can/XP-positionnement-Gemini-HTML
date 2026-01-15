@@ -23,8 +23,12 @@
     </script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;700;900&display=swap');
+        
         body { font-family: 'Inter', sans-serif; }
+        
+        .font-outfit { font-family: 'Outfit', sans-serif; }
+
         .glass-panel {
             background: rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(10px);
@@ -33,6 +37,61 @@
         .dark .glass-panel {
             background: rgba(15, 23, 42, 0.7);
         }
+
+        .title-badge {
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+        }
+        .dark .title-badge {
+            background: rgba(30, 41, 59, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .text-gradient-premium {
+            background: linear-gradient(135deg, #4f46e5 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .dark .text-gradient-premium {
+            background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #4f46e5;
+            border-radius: 50%;
+            display: inline-block;
+            position: relative;
+        }
+        .dark .pulse-dot {
+            background-color: #818cf8;
+        }
+        .pulse-dot::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            background-color: inherit;
+            border-radius: 50%;
+            animation: pulse-animation 2s infinite;
+            opacity: 0.6;
+        }
+
+        @keyframes pulse-animation {
+            0% { transform: scale(1); opacity: 0.6; }
+            100% { transform: scale(3.5); opacity: 0; }
+        }
+
         @media print {
             .no-print { display: none !important; }
             .print-only { display: block !important; }
@@ -398,9 +457,17 @@
                             <div className="bg-white p-3 rounded-2xl shadow-lg border border-slate-100 overflow-hidden flex items-center justify-center h-24 w-48 transition-all">
                                 <img src={BRANDING_LOGO_URL} alt="Logo" className="max-h-full max-w-full object-contain" />
                             </div>
-                            <div className="space-y-1">
-                                <h1 className="text-2xl font-black tracking-tight leading-none text-indigo-600 dark:text-indigo-400">Débuter en FAD...de l'aide à ma mesure.</h1>
-                                <div className="flex items-center gap-2">
+                            
+                            <div className="space-y-3">
+                                <div className="title-badge px-5 py-2.5 rounded-2xl flex items-center gap-3 transition-all">
+                                    <div className="flex items-center gap-2">
+                                        <div className="pulse-dot"></div>
+                                        <h1 className="text-xl md:text-2xl font-black tracking-tight leading-none font-outfit text-gradient-premium">
+                                            Débuter en FAD…de l’aide à ma mesure
+                                        </h1>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2 ml-1">
                                     <span className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Utilisateur :</span>
                                     <input type="text" value={userData.name} onChange={(e) => setUserData(prev => ({ ...prev, name: e.target.value }))} placeholder="Votre nom" className={`text-sm font-semibold bg-transparent border-b-2 border-slate-200 focus:border-indigo-500 focus:outline-none px-1 transition-all ${userData.isDarkMode ? 'text-white' : 'text-slate-800'}`} />
                                 </div>
@@ -490,7 +557,7 @@
                                             <div key={i} className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${activeCatIndex === i ? 'bg-indigo-600 w-8' : 'bg-slate-300 dark:bg-slate-700'}`} />
                                         ))}
                                     </div>
-                                    <button disabled={activeCatIndex === QUESTIONS.length - 1} onClick={() => setActiveCatIndex(prev => Math.min(QUESTIONS.length - 1, prev + 1))} className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${activeCatIndex === QUESTIONS.length - 1 ? 'opacity-30 cursor-not-allowed bg-slate-200 dark:bg-slate-800' : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-200 dark:shadow-none active:scale-95'}`}>
+                                    <button disabled={activeCatIndex === QUESTIONS.length - 1} onClick={() => setActiveCatIndex(prev => Math.min(QUESTIONS.length - 1, prev + 1))} className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${activeCatIndex === QUESTIONS.length - 1 ? 'opacity-30 cursor-not-allowed bg-slate-200 dark:bg-slate-800' : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-200 dark:shadow-indigo-900/30 active:scale-95'}`}>
                                         {activeCatIndex === QUESTIONS.length - 1 ? 'Terminer' : 'Suivant'} <ChevronRight size={20} />
                                     </button>
                                 </div>
@@ -507,7 +574,7 @@
                                                 <div className="bg-white p-2 border border-slate-100 shadow-sm rounded-lg h-16 w-32 flex items-center justify-center overflow-hidden">
                                                     <img src={BRANDING_LOGO_URL} alt="Logo" className="max-h-full max-w-full object-contain" />
                                                 </div>
-                                                <h1 className="text-2xl font-black text-indigo-700 uppercase tracking-tight leading-tight">
+                                                <h1 className="text-2xl font-black text-indigo-700 uppercase tracking-tight leading-tight font-outfit">
                                                     Débuter en FAD…de l’aide à ma mesure
                                                 </h1>
                                             </div>
