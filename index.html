@@ -295,6 +295,42 @@
             explorateur: { t: "L'Explorateur Techno", d: "Maître des outils. Vous dynamisez vos cours par l'innovation et les ressources multimédias.", icon: <Lightbulb className="text-rose-600" size={48} />, color: "text-rose-600" }
         };
 
+        // Composant Page de Garde
+        const CoverPage = ({ name }) => (
+            <div className="print-only page-break-after flex flex-col items-center justify-center min-h-[297mm] p-20 bg-white relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50 rounded-full -mr-32 -mt-32 opacity-50" />
+                <div className="absolute bottom-0 left-0 w-96 h-96 bg-slate-50 rounded-full -ml-48 -mb-48 opacity-50" />
+                <div className="w-64 h-32 mb-16 flex items-center justify-center overflow-hidden">
+                    <img src={BRANDING_LOGO_URL} alt="Logo" className="max-h-full max-w-full object-contain" />
+                </div>
+                <div className="text-center space-y-8 z-10">
+                    <div className="space-y-2">
+                        <span className="text-xs font-black text-indigo-500 uppercase tracking-[0.3em]">Positionnement de compétences</span>
+                        <h1 className="text-5xl font-black text-slate-900 leading-[1.1] font-outfit max-w-2xl mx-auto">
+                            Débuter en FAD… <br/> de l’aide à ma mesure
+                        </h1>
+                    </div>
+                    <div className="w-24 h-1.5 bg-indigo-600 mx-auto rounded-full" />
+                    <div className="space-y-4 pt-12">
+                        <p className="text-sm font-medium text-slate-500 uppercase tracking-widest">Rapport préparé pour</p>
+                        <h2 className="text-3xl font-bold text-slate-800 font-outfit">
+                            {name ? name : 'Enseignant(e) Anonyme'}
+                        </h2>
+                    </div>
+                    <div className="pt-24 text-slate-400 text-xs font-bold tracking-widest uppercase">
+                        Version Autoportante • {new Date().toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+                    </div>
+                </div>
+                <div className="absolute bottom-12 left-0 right-0 flex justify-center gap-4 text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">
+                    <span>Pédagogie</span>
+                    <span>•</span>
+                    <span>Numérique</span>
+                    <span>•</span>
+                    <span>Accompagnement</span>
+                </div>
+            </div>
+        );
+
         const App = () => {
             const [userData, setUserData] = useState(() => {
                 try {
@@ -314,6 +350,7 @@
             const [showSaveIcon, setShowSaveIcon] = useState(false);
             const [activeCatIndex, setActiveCatIndex] = useState(0);
             const [showInfoModal, setShowInfoModal] = useState(false);
+            const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
             const scrollContainerRef = useRef(null);
             const fileInputRef = useRef(null);
 
@@ -434,17 +471,29 @@
             };
 
             const exportPDF = useCallback(() => {
-                const element = document.getElementById('report-content');
-                if (!element) return;
-                const opt = {
-                    margin: [0, 0, 0, 0],
-                    filename: `Rapport_FAD_${userData.name || 'Anonyme'}.pdf`,
-                    image: { type: 'jpeg', quality: 0.98 },
-                    html2canvas: { scale: 2, useCORS: true, letterRendering: true, scrollY: 0 },
-                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                    pagebreak: { mode: ['css', 'legacy'] }
-                };
-                window.html2pdf().set(opt).from(element).save();
+                setIsGeneratingPDF(true);
+                // On attend que React ait rendu la page de garde avant de lancer la capture
+                setTimeout(() => {
+                    const element = document.getElementById('report-content');
+                    if (!element) {
+                        setIsGeneratingPDF(false);
+                        return;
+                    }
+                    const opt = {
+                        margin: [0, 0, 0, 0],
+                        filename: `Rapport_FAD_${userData.name || 'Anonyme'}.pdf`,
+                        image: { type: 'jpeg', quality: 0.98 },
+                        html2canvas: { scale: 2, useCORS: true, letterRendering: true, scrollY: 0 },
+                        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                        pagebreak: { mode: ['css', 'legacy'] }
+                    };
+                    window.html2pdf().set(opt).from(element).save().then(() => {
+                        setIsGeneratingPDF(false);
+                    }).catch(err => {
+                        console.error(err);
+                        setIsGeneratingPDF(false);
+                    });
+                }, 150);
             }, [userData.name]);
 
             const scrollToSection = (id) => {
@@ -603,47 +652,8 @@
 
                         <section className={`lg:w-1/2 overflow-y-auto px-10 py-10 ${userData.isDarkMode ? 'bg-slate-950' : 'bg-slate-100/30'}`}>
                             <div id="report-content" className="pdf-container">
-                                {/* PROPOSITION 1: PAGE DE GARDE INSTITUTIONNELLE */}
-                                <div className="print-only page-break-after flex flex-col items-center justify-center min-h-[297mm] p-20 bg-white relative overflow-hidden">
-                                    {/* Décoration de fond */}
-                                    <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50 rounded-full -mr-32 -mt-32 opacity-50" />
-                                    <div className="absolute bottom-0 left-0 w-96 h-96 bg-slate-50 rounded-full -ml-48 -mb-48 opacity-50" />
-                                    
-                                    <div className="w-64 h-32 mb-16 flex items-center justify-center overflow-hidden">
-                                        <img src={BRANDING_LOGO_URL} alt="Logo" className="max-h-full max-w-full object-contain" />
-                                    </div>
-
-                                    <div className="text-center space-y-8 z-10">
-                                        <div className="space-y-2">
-                                            <span className="text-xs font-black text-indigo-500 uppercase tracking-[0.3em]">Positionnement de compétences</span>
-                                            <h1 className="text-5xl font-black text-slate-900 leading-[1.1] font-outfit max-w-2xl mx-auto">
-                                                Débuter en FAD… <br/> de l’aide à ma mesure
-                                            </h1>
-                                        </div>
-
-                                        <div className="w-24 h-1.5 bg-indigo-600 mx-auto rounded-full" />
-
-                                        <div className="space-y-4 pt-12">
-                                            <p className="text-sm font-medium text-slate-500 uppercase tracking-widest">Rapport préparé pour</p>
-                                            <h2 className="text-3xl font-bold text-slate-800 font-outfit">
-                                                {userData.name ? userData.name : 'Enseignant(e) Anonyme'}
-                                            </h2>
-                                        </div>
-
-                                        <div className="pt-24 text-slate-400 text-xs font-bold tracking-widest uppercase">
-                                            Version Autoportante • {new Date().toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
-                                        </div>
-                                    </div>
-
-                                    {/* Pied de page de garde */}
-                                    <div className="absolute bottom-12 left-0 right-0 flex justify-center gap-4 text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">
-                                        <span>Pédagogie</span>
-                                        <span>•</span>
-                                        <span>Numérique</span>
-                                        <span>•</span>
-                                        <span>Accompagnement</span>
-                                    </div>
-                                </div>
+                                {/* SOLUTION DE RENDU ÉPHÉMÈRE: LA PAGE DE GARDE N'APPARAÎT QUE LORS DE LA GÉNÉRATION DU PDF */}
+                                {isGeneratingPDF && <CoverPage name={userData.name} />}
 
                                 <div className="space-y-10 p-8">
                                     {/* HEADER DE PAGE SECONDAIRE */}
@@ -682,7 +692,7 @@
                                                 </ResponsiveContainer>
                                             </div>
 
-                                            {/* PROPOSITION 2: BADGE D'ARCHÉTYPE STYLISÉ */}
+                                            {/* BADGE D'ARCHÉTYPE STYLISÉ */}
                                             {archetype && (
                                                 <div className="w-full flex flex-col md:flex-row items-center gap-10 p-8 rounded-3xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800">
                                                     <div className={`archetype-macaron ${archetype.color}`}>
@@ -734,7 +744,7 @@
                                             <h3 className="text-3xl font-black tracking-tight font-outfit">Plan de Développement Personnel</h3>
                                         </div>
 
-                                        {/* PROPOSITION 3: MISE EN PAGE ÉDITORIALE (2 COLONNES EN PDF) */}
+                                        {/* MISE EN PAGE ÉDITORIALE (2 COLONNES EN PDF) */}
                                         {stats.totalAnswered > 0 ? (
                                             <div className="grid grid-cols-1 md:grid-cols-1 gap-12 pdf-two-column">
                                                 {QUESTIONS.map((cat) => {
@@ -761,7 +771,6 @@
                                                                                         <span className={`text-[9px] font-black px-2 py-0.5 rounded ${score === 1 ? 'bg-rose-100 text-rose-600' : score === 2 ? 'bg-amber-100 text-amber-600' : 'bg-emerald-100 text-emerald-600'}`}>Score: {score}/3</span>
                                                                                         <span className="text-[9px] text-slate-400 font-bold uppercase truncate">Ressource suggérée</span>
                                                                                     </div>
-                                                                                    {/* PROPOSITION 5 (Partielle): Nettoyage liens PDF */}
                                                                                     <p className="text-[10px] text-indigo-500 font-medium truncate underline opacity-80">{resourceUrl}</p>
                                                                                 </div>
                                                                                 <a href={resourceUrl} target="_blank" rel="noopener noreferrer" className="p-2.5 bg-indigo-50 text-indigo-600 rounded-lg no-print hover:bg-indigo-600 hover:text-white transition-all"><ExternalLink size={14} /></a>
@@ -779,7 +788,7 @@
                                         )}
                                     </div>
 
-                                    {/* PROPOSITION 4: ESTHÉTIQUE RÉFLEXIVE POUR LES NOTES */}
+                                    {/* ESTHÉTIQUE RÉFLEXIVE POUR LES NOTES */}
                                     {Object.values(userData.notes).some(note => note && note.trim() !== '') && (
                                         <div className="space-y-8 pt-12 border-t-2 border-slate-200 dark:border-slate-800 page-break-avoid">
                                             <div className="flex items-center gap-3">
@@ -806,7 +815,7 @@
                                         </div>
                                     )}
 
-                                    {/* PROPOSITION 5: DÉTAILS DE FINITION PREMIUM (PIED DE PAGE) */}
+                                    {/* DÉTAILS DE FINITION PREMIUM (PIED DE PAGE) */}
                                     <div className="print-only pt-24 pb-8 text-center space-y-4">
                                         <div className="w-16 h-1 bg-slate-200 mx-auto rounded-full" />
                                         <div className="text-[9px] font-black text-slate-300 uppercase tracking-[0.3em]">
@@ -821,7 +830,7 @@
                         </section>
                     </main>
 
-                    {/* MODALE D'INFORMATION (Proposition 1) */}
+                    {/* MODALE D'INFORMATION */}
                     {showInfoModal && (
                         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
                             <div className={`relative w-full max-w-2xl p-8 rounded-[2rem] shadow-2xl border transition-all animate-in zoom-in-95 duration-300 ${userData.isDarkMode ? 'bg-slate-900 border-slate-800 text-slate-100' : 'bg-white border-slate-100 text-slate-900'}`}>
