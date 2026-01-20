@@ -24,11 +24,12 @@
     </script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;700;900&family=Playfair+Display:ital,wght@0,700;1,400&display=swap');
         
         body { font-family: 'Inter', sans-serif; }
         
         .font-outfit { font-family: 'Outfit', sans-serif; }
+        .font-playfair { font-family: 'Playfair Display', serif; }
 
         .glass-panel {
             background: rgba(255, 255, 255, 0.7);
@@ -53,12 +54,6 @@
 
         .text-gradient-premium {
             background: linear-gradient(135deg, #4f46e5 0%, #8b5cf6 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        .dark .text-gradient-premium {
-            background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -97,9 +92,12 @@
             .no-print { display: none !important; }
             .print-only { display: block !important; }
             body { background-color: white !important; }
-            .glass-panel { background: white !important; border: 1px solid #e2e8f0 !important; }
+            .glass-panel { background: white !important; border: 1px solid #e2e8f0 !important; box-shadow: none !important; }
             .pdf-container { width: 100% !important; padding: 0 !important; }
             .page-break-avoid { page-break-inside: avoid; }
+            .page-break-after { page-break-after: always; }
+            .pdf-two-column { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 1.5rem !important; }
+            .pdf-note-card { background-color: #fffaf0 !important; border-left: 4px solid #4f46e5 !important; }
         }
         .print-only { display: none; }
         .scroll-smooth-container {
@@ -145,6 +143,20 @@
             from { opacity: 0; transform: translateX(20px); }
             to { opacity: 1; transform: translateX(0); }
         }
+
+        /* Badge Archétype styles */
+        .archetype-macaron {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            border: 8px solid currentColor;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+            position: relative;
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 transition-colors duration-300">
@@ -158,7 +170,7 @@
         } from 'recharts';
         import { 
             RotateCcw, Save, FileText, Printer, Moon, Sun, ChevronRight, ChevronLeft, ExternalLink,
-            BookOpen, Users, Layout, Cpu, Cloud, ListChecks, Upload, Globe, ShieldCheck, CheckCircle, Award, Target, TrendingUp, Info, X
+            BookOpen, Users, Layout, Cpu, Cloud, ListChecks, Upload, Globe, ShieldCheck, CheckCircle, Award, Target, TrendingUp, Info, X, Compass, PenTool, Lightbulb
         } from 'lucide-react';
 
         // --- CONFIGURATION DU BRANDING ---
@@ -277,10 +289,10 @@
         };
 
         const ARCHETYPES = {
-            stratège: { t: "Le Stratège", d: "Profil équilibré. Vous jonglez avec brio entre technique, pédagogie et accompagnement." },
-            architecte: { t: "L'Architecte", d: "Expert en planification. Votre force réside dans le design pédagogique et la structure." },
-            facilitateur: { t: "Le Facilitateur", d: "L'humain est au cœur. Vous privilégiez un encadrement bienveillant et un soutien constant." },
-            explorateur: { t: "Le Facilitateur Techno", d: "Maître des outils. Vous dynamisez vos cours par l'innovation et les ressources multimédias." }
+            stratège: { t: "Le Stratège", d: "Profil équilibré. Vous jonglez avec brio entre technique, pédagogie et accompagnement.", icon: <Compass className="text-indigo-600" size={48} />, color: "text-indigo-600" },
+            architecte: { t: "L'Architecte", d: "Expert en planification. Votre force réside dans le design pédagogique et la structure.", icon: <PenTool className="text-emerald-600" size={48} />, color: "text-emerald-600" },
+            facilitateur: { t: "Le Facilitateur", d: "L'humain est au cœur. Vous privilégiez un encadrement bienveillant et un soutien constant.", icon: <Users className="text-amber-600" size={48} />, color: "text-amber-600" },
+            explorateur: { t: "L'Explorateur Techno", d: "Maître des outils. Vous dynamisez vos cours par l'innovation et les ressources multimédias.", icon: <Lightbulb className="text-rose-600" size={48} />, color: "text-rose-600" }
         };
 
         const App = () => {
@@ -356,7 +368,6 @@
                 const globalAvg = totalAnswered > 0 ? globalSum / totalAnswered : 0;
                 const globalProgress = (totalAnswered / totalQuestions) * 100;
 
-                // Calcul Forces/Faiblesses
                 const answeredCats = catStats.filter(c => c.count > 0);
                 const strength = answeredCats.length > 0 ? [...answeredCats].sort((a,b) => b.avg - a.avg)[0] : null;
                 const weakness = answeredCats.length > 0 ? [...answeredCats].sort((a,b) => a.avg - b.avg)[0] : null;
@@ -426,12 +437,12 @@
                 const element = document.getElementById('report-content');
                 if (!element) return;
                 const opt = {
-                    margin: [0.3, 0.3],
+                    margin: [0, 0, 0, 0],
                     filename: `Rapport_FAD_${userData.name || 'Anonyme'}.pdf`,
                     image: { type: 'jpeg', quality: 0.98 },
-                    html2canvas: { scale: 2, useCORS: true, letterRendering: true, scrollY: -window.scrollY },
-                    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
-                    pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+                    html2canvas: { scale: 2, useCORS: true, letterRendering: true, scrollY: 0 },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                    pagebreak: { mode: ['css', 'legacy'] }
                 };
                 window.html2pdf().set(opt).from(element).save();
             }, [userData.name]);
@@ -591,170 +602,221 @@
                         </section>
 
                         <section className={`lg:w-1/2 overflow-y-auto px-10 py-10 ${userData.isDarkMode ? 'bg-slate-950' : 'bg-slate-100/30'}`}>
-                            <div id="report-content" className="space-y-10 pdf-container">
-                                {/* EN-TÊTE DU RAPPORT PDF AMÉLIORÉ */}
-                                <div className="print-only mb-8 border-b-4 border-indigo-600 pb-8">
-                                    <div className="flex justify-between items-start gap-8">
-                                        <div className="flex-1 space-y-4">
-                                            <div className="flex items-center gap-4">
-                                                <div className="bg-white p-2 border border-slate-100 shadow-sm rounded-lg h-16 w-32 flex items-center justify-center overflow-hidden">
-                                                    <img src={BRANDING_LOGO_URL} alt="Logo" className="max-h-full max-w-full object-contain" />
-                                                </div>
-                                                <h1 className="text-2xl font-black text-indigo-700 uppercase tracking-tight leading-tight font-outfit">
-                                                    Débuter en FAD…de l’aide à ma mesure
-                                                </h1>
-                                            </div>
-                                            <div className="pl-2 border-l-4 border-indigo-100">
-                                                <p className="text-xs font-black uppercase text-slate-400 tracking-widest mb-1">Enseignant(e)</p>
-                                                <p className="text-xl font-bold text-slate-800">
-                                                    {userData.name ? userData.name : 'Participant(e) Anonyme'}
-                                                </p>
-                                            </div>
+                            <div id="report-content" className="pdf-container">
+                                {/* PROPOSITION 1: PAGE DE GARDE INSTITUTIONNELLE */}
+                                <div className="print-only page-break-after flex flex-col items-center justify-center min-h-[297mm] p-20 bg-white relative overflow-hidden">
+                                    {/* Décoration de fond */}
+                                    <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50 rounded-full -mr-32 -mt-32 opacity-50" />
+                                    <div className="absolute bottom-0 left-0 w-96 h-96 bg-slate-50 rounded-full -ml-48 -mb-48 opacity-50" />
+                                    
+                                    <div className="w-64 h-32 mb-16 flex items-center justify-center overflow-hidden">
+                                        <img src={BRANDING_LOGO_URL} alt="Logo" className="max-h-full max-w-full object-contain" />
+                                    </div>
+
+                                    <div className="text-center space-y-8 z-10">
+                                        <div className="space-y-2">
+                                            <span className="text-xs font-black text-indigo-500 uppercase tracking-[0.3em]">Positionnement de compétences</span>
+                                            <h1 className="text-5xl font-black text-slate-900 leading-[1.1] font-outfit max-w-2xl mx-auto">
+                                                Débuter en FAD… <br/> de l’aide à ma mesure
+                                            </h1>
                                         </div>
-                                        <div className="text-right space-y-2">
-                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Rapport individuel</p>
-                                            <div className="text-sm font-bold bg-slate-50 border border-slate-200 px-4 py-2 rounded-xl inline-block text-slate-600 shadow-inner">
-                                                Émis le : {new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
-                                            </div>
+
+                                        <div className="w-24 h-1.5 bg-indigo-600 mx-auto rounded-full" />
+
+                                        <div className="space-y-4 pt-12">
+                                            <p className="text-sm font-medium text-slate-500 uppercase tracking-widest">Rapport préparé pour</p>
+                                            <h2 className="text-3xl font-bold text-slate-800 font-outfit">
+                                                {userData.name ? userData.name : 'Enseignant(e) Anonyme'}
+                                            </h2>
                                         </div>
+
+                                        <div className="pt-24 text-slate-400 text-xs font-bold tracking-widest uppercase">
+                                            Version Autoportante • {new Date().toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+                                        </div>
+                                    </div>
+
+                                    {/* Pied de page de garde */}
+                                    <div className="absolute bottom-12 left-0 right-0 flex justify-center gap-4 text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">
+                                        <span>Pédagogie</span>
+                                        <span>•</span>
+                                        <span>Numérique</span>
+                                        <span>•</span>
+                                        <span>Accompagnement</span>
                                     </div>
                                 </div>
 
-                                <div className={`p-8 rounded-3xl shadow-2xl transition-all glass-panel border page-break-avoid ${userData.isDarkMode ? 'border-slate-800 shadow-indigo-900/10' : 'border-white shadow-slate-200'}`}>
-                                    <div className="flex flex-col items-center text-center space-y-6">
-                                        <div className="space-y-1">
-                                            <span className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em]">Votre Profil Radar</span>
-                                            <h2 className="text-5xl font-black" style={{ color: getLevelColor(stats.globalAvg) }}>{stats.globalAvg.toFixed(2)}</h2>
-                                            <p className="text-xs font-black uppercase tracking-widest opacity-60">{getLevelLabel(stats.globalAvg)}</p>
+                                <div className="space-y-10 p-8">
+                                    {/* HEADER DE PAGE SECONDAIRE */}
+                                    <div className="print-only flex justify-between items-center border-b pb-4 mb-8">
+                                        <div className="flex items-center gap-2">
+                                            <img src={BRANDING_LOGO_URL} className="h-8 grayscale opacity-50" />
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Bilan FAD</span>
                                         </div>
-                                        
-                                        <div className="w-full h-[350px]">
-                                            <ResponsiveContainer width="100%" height="100%">
-                                                <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
-                                                    <PolarGrid stroke={userData.isDarkMode ? '#334155' : '#e2e8f0'} />
-                                                    <PolarAngleAxis dataKey="subject" tick={{ fontSize: 10, fontWeight: 700, fill: userData.isDarkMode ? '#94a3b8' : '#475569' }} />
-                                                    <PolarRadiusAxis angle={30} domain={[0, 3]} tick={false} axisLine={false} />
-                                                    <Radar
-                                                        name="Score"
-                                                        dataKey="A"
-                                                        stroke={getLevelColor(stats.globalAvg)}
-                                                        fill={getLevelColor(stats.globalAvg)}
-                                                        fillOpacity={0.6}
-                                                    />
-                                                    <ReChartsTooltip 
-                                                        content={({ active, payload }) => {
-                                                            if (active && payload && payload.length) {
-                                                                const data = payload[0].payload;
-                                                                return (
-                                                                    <div className="bg-white dark:bg-slate-900 p-3 rounded-xl shadow-xl border border-slate-100 dark:border-slate-800">
-                                                                        <p className="text-[10px] font-black text-slate-400 uppercase">{data.fullName}</p>
-                                                                        <p className="text-sm font-bold text-indigo-500">Score: {data.A.toFixed(2)} / 3</p>
-                                                                    </div>
-                                                                );
-                                                            }
-                                                            return null;
-                                                        }}
-                                                    />
-                                                </RadarChart>
-                                            </ResponsiveContainer>
+                                        <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                            {userData.name}
                                         </div>
+                                    </div>
 
-                                        {/* Synthèse Analytique Dynamique */}
-                                        {stats.totalAnswered > 0 && (
-                                            <div className="w-full p-6 rounded-2xl bg-indigo-50/50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-900/30 text-left space-y-4 shadow-sm">
-                                                <div className="flex items-center gap-2">
-                                                    <Award className="text-indigo-500" size={20} />
-                                                    <h4 className="font-black text-sm uppercase tracking-tight text-indigo-700 dark:text-indigo-400">Votre profil en un coup d'œil</h4>
+                                    <div className={`p-10 rounded-[2.5rem] shadow-2xl transition-all glass-panel border page-break-avoid ${userData.isDarkMode ? 'border-slate-800 shadow-indigo-900/10' : 'border-white shadow-slate-200'}`}>
+                                        <div className="flex flex-col items-center text-center space-y-8">
+                                            <div className="space-y-1">
+                                                <span className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em]">Score Global de Positionnement</span>
+                                                <h2 className="text-6xl font-black font-outfit" style={{ color: getLevelColor(stats.globalAvg) }}>{stats.globalAvg.toFixed(2)}</h2>
+                                                <p className="text-xs font-black uppercase tracking-widest opacity-60 px-4 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-full inline-block mt-2">NIVEAU : {getLevelLabel(stats.globalAvg)}</p>
+                                            </div>
+                                            
+                                            <div className="w-full h-[400px]">
+                                                <ResponsiveContainer width="100%" height="100%">
+                                                    <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
+                                                        <PolarGrid stroke={userData.isDarkMode ? '#334155' : '#e2e8f0'} />
+                                                        <PolarAngleAxis dataKey="subject" tick={{ fontSize: 10, fontWeight: 700, fill: userData.isDarkMode ? '#94a3b8' : '#475569' }} />
+                                                        <PolarRadiusAxis angle={30} domain={[0, 3]} tick={false} axisLine={false} />
+                                                        <Radar
+                                                            name="Score"
+                                                            dataKey="A"
+                                                            stroke={getLevelColor(stats.globalAvg)}
+                                                            fill={getLevelColor(stats.globalAvg)}
+                                                            fillOpacity={0.6}
+                                                        />
+                                                    </RadarChart>
+                                                </ResponsiveContainer>
+                                            </div>
+
+                                            {/* PROPOSITION 2: BADGE D'ARCHÉTYPE STYLISÉ */}
+                                            {archetype && (
+                                                <div className="w-full flex flex-col md:flex-row items-center gap-10 p-8 rounded-3xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800">
+                                                    <div className={`archetype-macaron ${archetype.color}`}>
+                                                        {archetype.icon}
+                                                        <div className="absolute -bottom-2 px-3 py-1 bg-white border-2 border-slate-100 rounded-full text-[10px] font-black uppercase text-slate-800 tracking-widest shadow-sm">
+                                                            Profil
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-left flex-1 space-y-3">
+                                                        <h4 className={`text-2xl font-black font-outfit ${archetype.color}`}>{archetype.t}</h4>
+                                                        <p className="text-sm font-medium leading-relaxed text-slate-600 dark:text-slate-300">
+                                                            {archetype.d}
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                                <div className="space-y-3">
+                                            )}
+
+                                            {/* Synthèse Analytique Dynamique */}
+                                            {stats.totalAnswered > 0 && (
+                                                <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
                                                     {stats.strength && (
-                                                        <div className="flex gap-3">
-                                                            <div className="mt-1 p-1 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600"><TrendingUp size={14} /></div>
-                                                            <p className="text-xs leading-relaxed"><span className="font-bold">Force majeure :</span> Votre maîtrise en <span className="text-emerald-600 font-bold">"{stats.strength.name}"</span> est un levier solide pour vos projets de FAD.</p>
+                                                        <div className="p-6 rounded-2xl bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/30 flex gap-4">
+                                                            <div className="p-2 h-fit rounded-lg bg-emerald-100 dark:bg-emerald-800 text-emerald-600"><TrendingUp size={20} /></div>
+                                                            <div className="space-y-1">
+                                                                <h5 className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Point Fort</h5>
+                                                                <p className="text-xs leading-relaxed font-bold">{stats.strength.name}</p>
+                                                                <p className="text-[10px] text-slate-500">Ce domaine constitue un levier stratégique pour votre enseignement.</p>
+                                                            </div>
                                                         </div>
                                                     )}
-                                                    {stats.weakness && stats.weakness.id !== stats.strength?.id && (
-                                                        <div className="flex gap-3">
-                                                            <div className="mt-1 p-1 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600"><Target size={14} /></div>
-                                                            <p className="text-xs leading-relaxed"><span className="font-bold">Axe prioritaire :</span> Le domaine <span className="text-amber-600 font-bold">"{stats.weakness.name}"</span> gagnerait à être renforcé pour équilibrer votre pédagogie.</p>
-                                                        </div>
-                                                    )}
-                                                    {archetype && (
-                                                        <div className="pt-2 border-t border-indigo-100 dark:border-indigo-900/20">
-                                                            <p className="text-[11px] font-medium text-slate-500 italic dark:text-slate-400 leading-relaxed">
-                                                                Synthèse : {archetype.d}
-                                                            </p>
+                                                    {stats.weakness && (
+                                                        <div className="p-6 rounded-2xl bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/30 flex gap-4">
+                                                            <div className="p-2 h-fit rounded-lg bg-amber-100 dark:bg-amber-800 text-amber-600"><Target size={20} /></div>
+                                                            <div className="space-y-1">
+                                                                <h5 className="text-[10px] font-black text-amber-600 uppercase tracking-widest">Axe de Progrès</h5>
+                                                                <p className="text-xs leading-relaxed font-bold">{stats.weakness.name}</p>
+                                                                <p className="text-[10px] text-slate-500">Un renforcement ciblé ici équilibrerait votre profil pédagogique.</p>
+                                                            </div>
                                                         </div>
                                                     )}
                                                 </div>
-                                            </div>
-                                        )}
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
 
-                                <div className="space-y-8 pb-24">
-                                    <div className="flex items-center gap-3 page-break-avoid pt-6">
-                                        <div className="h-6 w-1.5 bg-emerald-500 rounded-full" />
-                                        <h3 className="text-2xl font-black tracking-tight">Plan de Développement & Ressources</h3>
-                                    </div>
-                                    {stats.totalAnswered > 0 ? (
-                                        <div className="space-y-10">
-                                            {QUESTIONS.map((cat) => {
-                                                const answeredInCat = cat.q.filter(q => userData.answers[q.id]);
-                                                if (answeredInCat.length === 0) return null;
-                                                return (
-                                                    <div key={cat.id} className={`overflow-hidden rounded-3xl border-2 page-break-avoid ${userData.isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100 shadow-lg shadow-slate-200/40'}`}>
-                                                        <div className="p-5 flex items-center justify-between" style={{ backgroundColor: `${getLevelColor(stats.catStats[cat.id].avg)}10`, borderLeft: `8px solid ${getLevelColor(stats.catStats[cat.id].avg)}` }}>
-                                                            <span className="text-sm font-black uppercase tracking-tight text-slate-800 dark:text-slate-100">{cat.cat}</span>
-                                                            <span className="text-[10px] font-black px-4 py-1.5 rounded-full text-white shadow-md" style={{ backgroundColor: getLevelColor(stats.catStats[cat.id].avg) }}>{getLevelLabel(stats.catStats[cat.id].avg)}</span>
-                                                        </div>
-                                                        <div className="p-6 space-y-4">
-                                                            {answeredInCat.map((q) => {
-                                                                const score = userData.answers[q.id];
-                                                                const resourceUrl = RESOURCES_MAP[q.id][score - 1];
-                                                                return (
-                                                                    <div key={q.id} className={`p-4 rounded-2xl border-2 flex justify-between items-center gap-5 transition-all hover:border-indigo-500/50 ${userData.isDarkMode ? 'bg-slate-800/40 border-slate-700/50' : 'bg-slate-50 border-slate-100'}`}>
-                                                                        <div className="flex-1 space-y-1">
-                                                                            <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100">{q.t}</h4>
-                                                                            <div className="flex items-center gap-2">
-                                                                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${score === 1 ? 'bg-rose-100 text-rose-600' : score === 2 ? 'bg-amber-100 text-amber-600' : 'bg-emerald-100 text-emerald-600'}`}>Niveau {score}</span>
-                                                                                <p className="text-[10px] opacity-70 leading-relaxed font-medium truncate max-w-[200px]">{resourceUrl}</p>
+                                    <div className="space-y-12 pb-24">
+                                        <div className="flex items-center gap-3 page-break-avoid pt-12">
+                                            <div className="h-8 w-2 bg-indigo-600 rounded-full" />
+                                            <h3 className="text-3xl font-black tracking-tight font-outfit">Plan de Développement Personnel</h3>
+                                        </div>
+
+                                        {/* PROPOSITION 3: MISE EN PAGE ÉDITORIALE (2 COLONNES EN PDF) */}
+                                        {stats.totalAnswered > 0 ? (
+                                            <div className="grid grid-cols-1 md:grid-cols-1 gap-12 pdf-two-column">
+                                                {QUESTIONS.map((cat) => {
+                                                    const answeredInCat = cat.q.filter(q => userData.answers[q.id]);
+                                                    if (answeredInCat.length === 0) return null;
+                                                    return (
+                                                        <div key={cat.id} className="page-break-avoid space-y-6">
+                                                            <div className="flex items-center justify-between border-b-2 pb-2" style={{ borderColor: getLevelColor(stats.catStats[cat.id].avg) }}>
+                                                                <h4 className="text-sm font-black uppercase tracking-widest text-slate-800 dark:text-slate-100">{cat.cat}</h4>
+                                                                <span className="text-[9px] font-black px-3 py-1 rounded-full text-white uppercase shadow-sm" style={{ backgroundColor: getLevelColor(stats.catStats[cat.id].avg) }}>
+                                                                    {getLevelLabel(stats.catStats[cat.id].avg)}
+                                                                </span>
+                                                            </div>
+                                                            <div className="space-y-4">
+                                                                {answeredInCat.map((q) => {
+                                                                    const score = userData.answers[q.id];
+                                                                    const resourceUrl = RESOURCES_MAP[q.id][score - 1];
+                                                                    return (
+                                                                        <div key={q.id} className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm space-y-3 transition-all hover:shadow-md">
+                                                                            <h5 className="text-xs font-bold leading-relaxed">{q.t}</h5>
+                                                                            <div className="flex items-center justify-between gap-4">
+                                                                                <div className="flex-1 min-w-0">
+                                                                                    <div className="flex items-center gap-2 mb-1">
+                                                                                        <span className={`text-[9px] font-black px-2 py-0.5 rounded ${score === 1 ? 'bg-rose-100 text-rose-600' : score === 2 ? 'bg-amber-100 text-amber-600' : 'bg-emerald-100 text-emerald-600'}`}>Score: {score}/3</span>
+                                                                                        <span className="text-[9px] text-slate-400 font-bold uppercase truncate">Ressource suggérée</span>
+                                                                                    </div>
+                                                                                    {/* PROPOSITION 5 (Partielle): Nettoyage liens PDF */}
+                                                                                    <p className="text-[10px] text-indigo-500 font-medium truncate underline opacity-80">{resourceUrl}</p>
+                                                                                </div>
+                                                                                <a href={resourceUrl} target="_blank" rel="noopener noreferrer" className="p-2.5 bg-indigo-50 text-indigo-600 rounded-lg no-print hover:bg-indigo-600 hover:text-white transition-all"><ExternalLink size={14} /></a>
                                                                             </div>
                                                                         </div>
-                                                                        <a href={resourceUrl} target="_blank" rel="noopener noreferrer" className="p-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-lg shadow-indigo-200 dark:shadow-indigo-900/30 transition-all active:scale-95 no-print"><ExternalLink size={16} /></a>
-                                                                    </div>
-                                                                );
-                                                            })}
+                                                                    );
+                                                                })}
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    ) : (
-                                        <div className="text-center p-16 rounded-3xl border-4 border-dashed border-slate-200 dark:border-slate-800 text-slate-400 font-bold italic">Complétez votre auto-évaluation pour découvrir vos recommandations.</div>
-                                    )}
-                                </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        ) : (
+                                            <div className="text-center p-16 rounded-3xl border-4 border-dashed border-slate-200 dark:border-slate-800 text-slate-400 font-bold italic">Complétez votre auto-évaluation pour découvrir vos recommandations.</div>
+                                        )}
+                                    </div>
 
-                                {/* Section Notes pour le PDF */}
-                                {Object.values(userData.notes).some(note => note && note.trim() !== '') && (
-                                    <div className="space-y-8 pt-12 border-t-2 border-slate-200 dark:border-slate-800 page-break-avoid">
-                                        <div className="flex items-center gap-3">
-                                            <div className="h-6 w-1.5 bg-indigo-500 rounded-full" />
-                                            <h3 className="text-2xl font-black tracking-tight">Notes & Réflexions</h3>
-                                        </div>
-                                        <div className="grid grid-cols-1 gap-5">
-                                            {QUESTIONS.map((cat) => userData.notes[cat.id] && userData.notes[cat.id].trim() !== '' && (
-                                                <div key={cat.id} className={`p-7 rounded-2xl border-2 page-break-avoid ${userData.isDarkMode ? 'bg-slate-900 border-slate-800 shadow-lg' : 'bg-white border-slate-50 shadow-xl shadow-slate-200/50'}`}>
-                                                    <div className="flex items-center gap-2 mb-4">
-                                                        <div className="text-indigo-500">{cat.icon}</div>
-                                                        <h4 className="text-[11px] font-black uppercase text-indigo-500 tracking-[0.15em]">{cat.cat}</h4>
+                                    {/* PROPOSITION 4: ESTHÉTIQUE RÉFLEXIVE POUR LES NOTES */}
+                                    {Object.values(userData.notes).some(note => note && note.trim() !== '') && (
+                                        <div className="space-y-8 pt-12 border-t-2 border-slate-200 dark:border-slate-800 page-break-avoid">
+                                            <div className="flex items-center gap-3">
+                                                <div className="h-8 w-2 bg-slate-900 dark:bg-slate-200 rounded-full" />
+                                                <h3 className="text-3xl font-black tracking-tight font-outfit">Réflexions Pédagogiques</h3>
+                                            </div>
+                                            <div className="grid grid-cols-1 gap-8">
+                                                {QUESTIONS.map((cat) => userData.notes[cat.id] && userData.notes[cat.id].trim() !== '' && (
+                                                    <div key={cat.id} className="pdf-note-card p-8 rounded-3xl relative page-break-avoid bg-[#fffdfa] border border-[#f1e6d0]">
+                                                        <div className="flex items-center justify-between mb-6">
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="text-indigo-600 opacity-40">{cat.icon}</div>
+                                                                <h4 className="text-[11px] font-black uppercase text-indigo-600 tracking-[0.2em]">{cat.cat}</h4>
+                                                            </div>
+                                                            <span className="font-playfair text-4xl text-indigo-200 absolute top-4 right-8 select-none">“</span>
+                                                        </div>
+                                                        <p className="font-playfair italic text-lg leading-relaxed text-slate-700 whitespace-pre-wrap pl-6 border-l-2 border-indigo-100">
+                                                            {userData.notes[cat.id]}
+                                                        </p>
+                                                        <span className="font-playfair text-4xl text-indigo-200 block text-right mt-2 select-none">”</span>
                                                     </div>
-                                                    <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300 italic whitespace-pre-wrap border-l-4 border-indigo-100 dark:border-indigo-900/50 pl-5">"{userData.notes[cat.id]}"</p>
-                                                </div>
-                                            ))}
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* PROPOSITION 5: DÉTAILS DE FINITION PREMIUM (PIED DE PAGE) */}
+                                    <div className="print-only pt-24 pb-8 text-center space-y-4">
+                                        <div className="w-16 h-1 bg-slate-200 mx-auto rounded-full" />
+                                        <div className="text-[9px] font-black text-slate-300 uppercase tracking-[0.3em]">
+                                            Ce document est une synthèse personnelle générée via l'application "Habiletés FAD"
+                                        </div>
+                                        <div className="text-[8px] font-bold text-slate-400">
+                                            © {new Date().getFullYear()} • Rapport Individuel Confidentiel • Page 1 sur 2
                                         </div>
                                     </div>
-                                )}
+                                </div>
                             </div>
                         </section>
                     </main>
